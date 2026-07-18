@@ -1,1 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-night: #0B1F17;
+  --color-chalk: #F4F1E9;
+  --color-floodlight: #FFB627;
+  --color-pitch: #1F4D3A;
+  --color-line: rgba(244, 241, 233, 0.12);
+
+  --font-display: "Oswald", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  --tracking-widest2: 0.2em;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-night);
+  color: var(--color-chalk);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

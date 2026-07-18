@@ -1,103 +1,83 @@
-import React, { useState } from 'react';
-import { Menu, X, Trophy } from 'lucide-react';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function Navbar({ transparent = false, user = null }) { // Fixed: changed '-' to '='
+    const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navLinks = [
-    { label: 'TEAMS', href: '#' },
-    { label: 'MATCHES', href: '#' },
-    { label: 'STANDINGS', href: '#' },
-  ];
+    const navLinks = [
+        { label: "Teams", to: "/teams" }, // Fixed: Added missing comma
+        { label: "Matches", to: "/matches" }
+    ];
 
-  return (
-    <nav className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-black text-white backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Desktop Viewport Layout */}
-        <div className="relative flex h-16 items-center justify-between">
-          
-          {/* Left Side: Logo */}
-          <div className="flex items-center gap-x-2">
-            <Trophy className="h-6 w-6 text-emerald-500" />
-            <span className="font-black tracking-widest text-xl">PITCHTRACK</span>
-          </div>
+    return (
+        <nav className={`w-full z-30 ${
+            transparent
+                ? "absolute top-0 left-0 bg-gradient-to-b from-night/80 to-transparent"
+                : "relative bg-night border-b border-line"
+        }`}>
+            <div className="max-w-7xl mx-auto px-6 md:px-10 py-5 flex items-center justify-between">
+                <Link to="/" className="flex items-center gap-2"> {/* Fixed: 'items' to 'items-center' */}
+                  <span className="font-display font-bold text-xl md:text-2xl tracking-wide text-chalk uppercase">
+                      Pitch<span className="text-floodlight">Track</span>
+                  </span>
+                </Link>
 
-          {/* Absolute Center: Navigation Items */}
-          <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-x-8 md:flex">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-sm font-semibold tracking-wider text-zinc-400 transition-colors hover:text-white"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+                <div className="hidden md:flex items-center gap-8 font-body text-sm uppercase tracking-widest2 text-chalk/80">
+                    {navLinks.map((link) => (
+                        <Link key={link.to} to={link.to} className="hover:text-floodlight transition-colors">
+                            {link.label} {/* Fixed: Added missing link label text */}
+                        </Link>
+                    ))}
 
-          {/* Right Side: Auth Buttons */}
-          <div className="hidden items-center gap-x-4 md:flex">
-            <a
-              href="#"
-              className="text-sm font-semibold tracking-wider text-zinc-400 transition-colors hover:text-white"
-            >
-              LOGIN
-            </a>
-            <a
-              href="#"
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold tracking-wider text-white transition-colors hover:bg-emerald-500"
-            >
-              REGISTER
-            </a>
-          </div>
-
-          {/* Mobile Menu Button Trigger */}
-          <div className="flex md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-zinc-400 hover:bg-zinc-900 hover:text-white focus:outline-none"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Mobile Menu Dropdown Panel */}
-      {isOpen && (
-        <div className="border-t border-zinc-900 bg-black px-4 py-4 md:hidden">
-          <div className="flex flex-col gap-y-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className="text-base font-medium tracking-wide text-zinc-300 hover:text-white"
-              >
-                {link.label}
-              </a>
-            ))}
-            <hr className="border-zinc-900" />
-            <div className="flex flex-col gap-y-3">
-              <a
-                href="#"
-                onClick={() => setIsOpen(false)}
-                className="text-center text-base font-medium tracking-wide text-zinc-300 hover:text-white"
-              >
-                LOGIN
-              </a>
-              <a
-                href="#"
-                onClick={() => setIsOpen(false)}
-                className="rounded-md bg-emerald-600 py-2 text-center text-base font-semibold tracking-wide text-white hover:bg-emerald-500"
-              >
-                REGISTER
-              </a>
+                    {user ? (
+                        <Link to="/dashboard" className="px-4 py-2 rounded border border-chalk/30 hover:border-floodlight hover:text-floodlight transition-colors">
+                            Dashboard
+                        </Link>    
+                    ) : (
+                        <>
+                            <Link to="/login" className="hover:text-floodlight transition-colors">
+                                Log In
+                            </Link>
+                            <Link to="/register" className="px-4 py-2 rounded bg-floodlight text-night font-semibold hover:bg-chalk transition-colors">
+                                Register
+                            </Link>
+                        </>   
+                    )}
+                </div>  
+                
+                <button
+                    className="md:hidden text-chalk"
+                    onClick={() => setMobileOpen((prev) => !prev)}
+                    aria-label="Toggle navigation menu"
+                >
+                    {mobileOpen ? <X size={26}/> : <Menu size={26} />}
+                </button>
             </div>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
+
+            {mobileOpen && (
+                <div className="md:hidden bg-night border-t border-line px-6 py-4 flex flex-col gap-4 font-body uppercase tracking-wide"> {/* Fixed: completed 'tracking' class */}
+                    {navLinks.map((link) => (
+                        <Link key={link.to} to={link.to} onClick={() => setMobileOpen(false)}>
+                            {link.label}
+                        </Link>
+                    ))}
+                    {user ? (
+                        <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                            Dashboard
+                        </Link>
+                    ) : (
+                        <>
+                            <Link to="/login" onClick={() => setMobileOpen(false)}>
+                                Log in
+                            </Link>
+                            <Link to="/register" onClick={() => setMobileOpen(false)}>
+                                Register
+                            </Link>
+                        </>            
+                    )}
+                </div>
+            )}
+        </nav>
+    );
 }
