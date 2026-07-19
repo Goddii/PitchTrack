@@ -2,6 +2,11 @@ import { useState } from "react";
 import Hero from "../components/Hero";
 import TeamCard from "../components/TeamCard"
 import MatchCard from "../components/MatchCard"
+import HowItWorks from "../components/HowItWorks";
+import CTASection from "../components/CTASection";
+import LeagueStats from "../components/LeagueStats";
+import WhySection from "../components/WhySection";
+
 
 
 export default function Home() {
@@ -43,7 +48,10 @@ export default function Home() {
                 ) : (
                     <p className="font-body text-chalk/50">No fixtures scheduled yet</p>
                 )}
-
+            <LeagueStats/>
+            <WhySection />
+            <HowItWorks />
+            <CTASection />
             </section>
             <footer className="border-t border-line px-6 md:px-10 py-8 flex flex-col md:flex-col md:flex-row items-center justify-between gap-4 font-body text-sm text/chalk/50">
             <span>@ 2026 PitchTrack</span>
