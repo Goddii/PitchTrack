@@ -1,12 +1,21 @@
 import { useState } from 'react'
 import './App.css'
 import Home from './pages/Home'
-import { BrowserRouter } from 'react-router-dom'
+import Teams from './pages/Teams'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
 
 function App() {
   
     return (
-        <Home />
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/teams" element={<Teams />} />
+                
+            </Routes>
+        </BrowserRouter>
+
     )
   
 }

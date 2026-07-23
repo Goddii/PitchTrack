@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
-export default function Navbar({ transparent = false, user = null }) { // Fixed: changed '-' to '='
+export default function Navbar({ transparent = false, user = null }) { 
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const navLinks = [
-        { label: "Teams", to: "/teams" }, // Fixed: Added missing comma
+        { label: "Teams", to: "/teams" }, 
         { label: "Matches", to: "/matches" }
     ];
 
@@ -16,8 +16,8 @@ export default function Navbar({ transparent = false, user = null }) { // Fixed:
                 ? "absolute top-0 left-0 bg-gradient-to-b from-night/80 to-transparent"
                 : "relative bg-night border-b border-line"
         }`}>
-            <div className="max-w-7xl mx-auto px-6 md:px-10 py-5 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-2"> {/* Fixed: 'items' to 'items-center' */}
+            <div className="max-w-7xl  px-6 md:px-10 py-5 flex items-center justify-between">
+                <Link to="/" className="flex items-center gap-2"> 
                   <span className="font-display font-bold text-xl md:text-2xl tracking-wide text-chalk uppercase">
                       Pitch<span className="text-floodlight">Track</span>
                   </span>
@@ -26,7 +26,7 @@ export default function Navbar({ transparent = false, user = null }) { // Fixed:
                 <div className="hidden md:flex items-center gap-8 font-body text-sm uppercase tracking-widest2 text-chalk/80">
                     {navLinks.map((link) => (
                         <Link key={link.to} to={link.to} className="hover:text-floodlight transition-colors">
-                            {link.label} {/* Fixed: Added missing link label text */}
+                            {link.label} 
                         </Link>
                     ))}
 
