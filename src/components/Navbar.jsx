@@ -6,7 +6,8 @@ export default function Navbar({ transparent = false, user = null }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const navLinks = [
-        { label: "Teams", to: "/teams" }, 
+        { label: "Teams", to: "/teams" },
+        { label: "Players", to: "/players"}, 
         { label: "Matches", to: "/matches" }
     ];
 

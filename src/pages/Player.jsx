@@ -33,10 +33,10 @@ export default function Players() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setPlayers(MOCK_PLAYERS)
-            .setLoading(false)
+            setLoading(false)
         }, 600)
         return () => clearTimeout(timer)
-    })
+    }, [])
 
     useEffect(() => {
         const handle = setTimeout(() => setDebouncedQuery(query), 300)
@@ -86,10 +86,13 @@ export default function Players() {
 
                 {loading ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {filteredPlayers.map((p) => (
-                            <PlayerCard key={p.id} player={p} />
-                        ))}
+                        {Array.from({ length: 8}).map((_, i) => <PlayerCardSkeleton key={i}  />)}
+                        
                     </div>
+                ) : filteredPlayers.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {filteredPlayers.map((p) => <PlayerCard key={p.id} player={p} />)}
+                    </div>    
                 ) : (
                     <EmptyState 
                         icon={SearchX}

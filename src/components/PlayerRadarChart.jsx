@@ -1,5 +1,5 @@
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar} from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart"
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from "recharts";
+
 
 const ATTRIBUTE_LABELS = {
     pace: "Pace",
@@ -26,7 +26,7 @@ function ratingTier(score) {
 }
 
 export default function PlayerRadarChart({ attributes }) {
-    const chartData = Object.entries(attributes).map(([Key, value]) => ({
+    const chartData = Object.entries(attributes).map(([key, value]) => ({
         attribute: ATTRIBUTE_LABELS[key] ?? key, value
     }))
 
@@ -43,15 +43,19 @@ export default function PlayerRadarChart({ attributes }) {
                 </div>
             </div>
 
-            <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[300px] w-full text-chalk/500">
-                <RadarChart data={chartData} outerRadius="72">
-                    <ChartTooltip content={<ChartTooltipContent hidelabel indicator="line" />} />
-                    <PolarGrid className="stroke-line/40" />
-                    <PolarAngleAxis dataKey="attributes" tick={{ fill: "currentColor", fontSize: 12}} />
-                    <Radar dataKey="value" className="fill-floodlight stroke-floodlight" fillOpacity={0.35} strokeWidth={2} />
-                </RadarChart>
-
-            </ChartContainer>
+            <div className="mx-auto aspect-square max-h-[300px] w-full text-chalk/50">
+                <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart data={chartData} outerRadius="72%">
+                        <Tooltip
+                            contentStyle={{ background: "var(--color-night)", border: "1px solid var(--color-line, #333)" }}
+                            labelStyle={{ color: "inherit" }}
+                        />
+                        <PolarGrid className="stroke-line/40" />
+                        <PolarAngleAxis dataKey="attribute" tick={{ fill: "currentColor", fontSize: 12 }} />
+                        <Radar dataKey="value" className="fill-floodlight stroke-floodlight" fillOpacity={0.35} strokeWidth={2} />
+                    </RadarChart>
+                </ResponsiveContainer>
+            </div>
 
             <p className="font-body text-[11px] text-chalk/35 text-center mt-1">
                 Overall is a simple average of the attributes above - a placeholder until real match data drives this

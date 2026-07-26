@@ -27,7 +27,7 @@ const WALKIN_STYLES = `
 }
 
 .player-walkin-card { animation: pt-walk-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.player-walkin-sweep { animation: pt-sweep 1.05s eas(e-out 0.25s both; }
+.player-walkin-sweep { animation: pt-sweep 1.05s ease-out 0.25s both; }
 .player-walkin-meta > * { animation: pt-rise-in 0.5s ease-out both;}
 .player-walkin-meta > *:nth-child(1) { animation-delay: 0.5s }
 .player-walkin-meta > *:nth-child(2) { animation-delay: 0.6s }
@@ -104,7 +104,7 @@ export default function PlayerProfile() {
                     </Link>
                     <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8">
                         {/* walk in photo/placeholder*/}
-                        <div className="player walkin-card relative w-44 h-56 shrink-0 rounded-2xl overflow-hidden border border-line bg-gradient-to-b from-pitch/60 to-night">
+                        <div className="player-walkin-card relative w-44 h-56 shrink-0 rounded-2xl overflow-hidden border border-line bg-gradient-to-b from-pitch/60 to-night">
                             {player.photo_url ? (
                                 <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover" />
                             ) : (
