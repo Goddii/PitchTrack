@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { ArrowRight, Trophy, Users, ShieldCheck } from "lucide-react"; 
 import { Link } from "react-router-dom";   
 import Navbar from "./Navbar"; 
-import heroplayer from "../assets/soccer.png"  
+import heroPlayer from "../assets/soccer.png"  
 
 /*  stat card for the hero overlay */
 function HeroStatCard( {label, value, delay} ){

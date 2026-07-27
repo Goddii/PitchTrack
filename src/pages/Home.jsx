@@ -15,9 +15,6 @@ const STATS = [
 
 
 export default function Home() {
-    const [teams, setTeams] = useState([])
-    const [matches, setMatches] = useState([])
-
     return (
         <div className="homepage-skill">
             <Hero />
