@@ -6,6 +6,7 @@ import Player from './pages/Player'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import PlayerProfile from './pages/PlayerProfile'
 import TeamDetails from './pages/TeamDetails'
+import Matches from "./pages/Matches"
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/players" element={<Player />} />
                 <Route path="/players/:id" element={<PlayerProfile />} />
                 <Route path="/teams/:id" element={<TeamDetails />} />
+                <Route path="/matches" element={<Matches />} />
                 
             </Routes>
         </BrowserRouter>

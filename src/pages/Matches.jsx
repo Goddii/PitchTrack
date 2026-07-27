@@ -8,7 +8,6 @@ import LiveMatchCarousel from "../components/LiveMatchCarousel";
 import SearchBar from "../components/SearchBar";
 import EmptyState from "../components/EmptyState";
 import { MOCK_MATCHES } from "../data/mockData"
-import { getBandSizeOfAxis } from "recharts/types/util/ChartUtils";
 
 
 const TABS = [
@@ -33,6 +32,19 @@ export default function Matches() {
 
 
     //todo replace with fetch(/api/matches)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setMatches(MOCK_MATCHES)
+            setLoading(false)
+        }, 600)
+        return () => clearTimeout(timer)
+    }, [])
+
+    useEffect(() => {
+        const handle = setTimeout(() => setDebouncedQuery(query), 300)
+        return () => clearTimeout(handle)
+    }, [])
+
     useEffect(() => {
         const next = {}
         if (tab !== "live") next.status = tab
@@ -72,7 +84,7 @@ export default function Matches() {
                 <h1 className="font-display uppercase tracking-wide text-3xl text-chalk mb-8">Matches</h1> 
                 <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8 items-start">
                     {/* left live match slideshow */}
-                    <LiveMatchCarousel matches={liveMatches} loading={{loading}}/>
+                    <LiveMatchCarousel matches={liveMatches} loading={loading}/>
 
                     {/* right tabs search date-grouped list */}
                     <div>

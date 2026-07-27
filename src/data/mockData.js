@@ -29,6 +29,13 @@ export const MOCK_MATCHES = [
     { id: 8, home_team: team(8), away_team: team(1), match_date: "2026-07-11T14:00:00", status: "completed", home_score: 1, away_score: 3, venue: "Priory Ground" },
     { id: 9, home_team: team(7), away_team: team(5), match_date: "2026-08-01T15:00:00", status: "scheduled", home_score: null, away_score: null, venue: "Oak Valley Ground" },
     { id: 10, home_team: team(2), away_team: team(6), match_date: "2026-08-01T17:00:00", status: "scheduled", home_score: null, away_score: null, venue: "Dunmore Athletic Park" },
+
+    // Live matches — status "live" is new (your data previously only had
+    // scheduled/completed). Each carries a `minute` for elapsed time.
+    { id: 11, home_team: team(1), away_team: team(4), match_date: "2026-07-26T15:00:00", status: "live", minute: 63, home_score: 1, away_score: 0, venue: "Millbrook Community Ground" },
+    { id: 12, home_team: team(2), away_team: team(7), match_date: "2026-07-26T15:00:00", status: "live", minute: 27, home_score: 0, away_score: 0, venue: "Dunmore Athletic Park" },
+    { id: 13, home_team: team(5), away_team: team(8), match_date: "2026-07-26T15:30:00", status: "live", minute: 78, home_score: 2, away_score: 2, venue: "Seaford Pitch" },
+    { id: 14, home_team: team(6), away_team: team(3), match_date: "2026-07-26T16:00:00", status: "live", minute: 5, home_score: 0, away_score: 0, venue: "Ashfield Community Pitch" },
 ];
 
 // Attribute scale is 0-100. Goalkeepers get a distinct attribute set

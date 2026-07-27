@@ -21,7 +21,7 @@ export default function LiveMatchCarousel({ matches, loading }) {
 
     if (loading) {
         return (
-            <div className="bg-pitch/10 border border-line rounded-lg p-6 animate-pulse lg:sticky lg:top-6"aria-hidden="true">
+            <div className="bg-pitch/10 border border-line rounded-lg p-6 animate-pulse lg:sticky lg:top-6" aria-hidden="true">
                 <div className="h-3 w-20 bg-line/30 rounded mb-8"/>
                 <div className="h-20 bg-line/20 rounded mb-8"/>
                 <div className="h-3 w-32 bg-line/20 rounded mx-auto"/>
@@ -31,8 +31,16 @@ export default function LiveMatchCarousel({ matches, loading }) {
     }
 
     if (!matches.length) {
-
         return (
+            <div className="bg-pitch/10 border border-line rounded-lg p-8 text-center lg:sticky lg:top-6">
+                <p className="font-body text-sm text-chalk/50"> No matches live right now</p>
+            </div>
+        )
+    }
+
+    const match = matches[index]
+
+    return (
             <div 
             className="bg-gradient-to-b from-night to-pitch/20 border border-line rounded-lg p-6 lg:sticky lg:top-6"
             onMouseEnter={() => setPaused(true)}
@@ -43,40 +51,40 @@ export default function LiveMatchCarousel({ matches, loading }) {
                         <span className="w-1.5 h-1.5 rounded-full bg-floodlight animate-pulse"/>
                         Live now
                     </span>
-                    <span className="font-body text-xs text-chalk/40"> {index + 1}/{matches.length}</span>
+                    <span className="font-body text-xs text-chalk/40"> {index + 1}/{match.length}</span>
 
                 </div>
                 <div aria-live="polite" className="flex items-center justify-between gap-3 mb-6">
                     <div className="flex-1 flex flex-col items-center gap-2 text-center min-w-0">
                         <span className="w-14 h-14 rounded-full bg-pitch flex items-center justify-center font-display text-chalk/60 text-lg shrink-0">
-                            {matches.home_team.name.charAt(0)}
+                            {match.home_team.name.charAt(0)}
                         </span>
                         <span className="font-display uppercase tracking-wide text-sm text-chalk truncate max-w-full">
-                            {matches.home_team.name}
+                            {match.home_team.name}
                         </span>
 
                     </div>
                     <div className="flex flex-col items-center shrink-0 px-1">
                         <span className="font-display text-4xl font-bold tabular-nums text-chalk">
-                            {matches.home_score} - {matches.away_score}
+                            {match.home_score} - {match.away_score}
 
                         </span>
-                        <span className="font-body text-xs text-floodlight font-semibold mt-1"> {matches.minute} </span>
+                        <span className="font-body text-xs text-floodlight font-semibold mt-1"> {match.minute} </span>
 
                     </div>
                     <div className="flex-1 flex flex-col items-center gap-2 text-center min-w-0">
                         <span className="w-14 h-14 rounded-full bg-pitch flex items-center justify-center font-display text-chalk/60 text-lg shrink-0">
-                            {matches.away_team.name.charAt(0)}
+                            {match.away_team.name.charAt(0)}
                         </span>
                         <span className="font-display uppercase tracking-wide text-sm text-chalk truncate max-w-full">
-                            {matches.away_team.name}
+                            {match.away_team.name}
                         </span>
 
                     </div>
 
                 </div>
 
-                <p className="font-body text-xs text-chalk/40 text-center mb-6"> {matches.venue}</p>
+                <p className="font-body text-xs text-chalk/40 text-center mb-6"> {match.venue}</p>
 
                 <div className="flex items-center justify-between">
                     <button 
@@ -116,4 +124,3 @@ export default function LiveMatchCarousel({ matches, loading }) {
 
     }
 
-}
