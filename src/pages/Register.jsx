@@ -14,3 +14,27 @@ export default function Register() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        if (password !== confirmPassword) {
+            setError("Passwords don't match");
+            return;
+        }
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters");
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            await register(name.trim(), email.trim().toLowerCase(), password);
+            navigate("/dashboard", { replace: true });
+        } catch (err) {
+            setError(err.message || "Something went wrong creating your account");
+        } finally {
+            setSubmitting(false);
+        }
+    };
