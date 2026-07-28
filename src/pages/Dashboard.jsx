@@ -18,3 +18,19 @@ export default function Dashboard() {
     const [profileError, setProfileError] = useState("");
     const [profileSuccess, setProfileSuccess] = useState("");
     const [savingProfile, setSavingProfile] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoadingFavorites(true);
+        api.favorites
+            .list()
+            .then((data) => {
+                if (!cancelled) setFavorites(data);
+            })
+            .finally(() => {
+                if (!cancelled) setLoadingFavorites(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
