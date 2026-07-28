@@ -96,3 +96,5 @@ export const api = {
         unfollow: (teamId) => request(`/favorites/${teamId}`, { method: "DELETE" }),
     },
 };
+
+export default api
