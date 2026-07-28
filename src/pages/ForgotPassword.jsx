@@ -12,3 +12,18 @@ export default function ForgotPassword() {
     // TODO: once real email delivery is wired up on the backend, drop this -
     // the token is only surfaced here because there's no email provider yet.
     const [devResetToken, setDevResetToken] = useState(null);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setSubmitting(true);
+        try {
+            const data = await api.auth.forgotPassword({ email: email.trim().toLowerCase() });
+            setSubmitted(true);
+            setDevResetToken(data?.reset_token || null);
+        } catch (err) {
+            setError(err.message || "Something went wrong");
+        } finally {
+            setSubmitting(false);
+        }
+    };
