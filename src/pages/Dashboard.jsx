@@ -34,3 +34,29 @@ export default function Dashboard() {
             cancelled = true;
         };
     }, []);
+
+    const handleUnfollow = async (teamId) => {
+        // optimistic update, roll back on failure
+        const prev = favorites;
+        setFavorites((f) => f.filter((fav) => fav.team.id !== teamId));
+        try {
+            await api.favorites.unfollow(teamId);
+        } catch {
+            setFavorites(prev);
+        }
+    };
+
+    const handleProfileSubmit = async (e) => {
+        e.preventDefault();
+        setProfileError("");
+        setProfileSuccess("");
+        setSavingProfile(true);
+        try {
+            await updateProfile({ name: name.trim(), email: email.trim().toLowerCase() });
+            setProfileSuccess("Profile updated");
+        } catch (err) {
+            setProfileError(err.message || "Couldn't update your profile");
+        } finally {
+            setSavingProfile(false);
+        }
+    };
