@@ -4,3 +4,12 @@ import { ArrowLeft, MapPin, Calendar, CalendarX } from "lucide-react"
 import Navbar from "../components/Navbar"
 import EmptyState from "../components/EmptyState"
 import { MOCK_MATCHES } from "../data/mockData"
+
+function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString(undefined, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    })
+}
