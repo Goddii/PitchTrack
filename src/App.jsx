@@ -7,6 +7,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import PlayerProfile from './pages/PlayerProfile'
 import TeamDetails from './pages/TeamDetails'
 import Matches from "./pages/Matches"
+import { AuthProvider } from "./context/AuthContext"
+import Login from "./pages/Login"
+import Register from "./pages/Register"
+import ForgotPassword from "./pages/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword"
 
 
 function App() {
