@@ -1,0 +1,6 @@
+import { useEffect, useState } from "react"
+import { useParams, Link } from "react-router-dom"
+import { ArrowLeft, MapPin, Calendar, CalendarX } from "lucide-react"
+import Navbar from "../components/Navbar"
+import EmptyState from "../components/EmptyState"
+import { MOCK_MATCHES } from "../data/mockData"
