@@ -11,6 +11,7 @@ import { AuthProvider } from "./context/AuthContext"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import ForgotPassword from "./pages/ForgotPassword"
+import ProtectedRoute from "./components/ProtectedRoute"
 import ResetPassword from "./pages/ResetPassword"
 
 
