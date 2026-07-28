@@ -13,6 +13,7 @@ function App() {
   
     return (
         <BrowserRouter>
+        <AuthProvider>
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/teams" element={<Teams />} />
@@ -20,9 +21,23 @@ function App() {
                 <Route path="/players/:id" element={<PlayerProfile />} />
                 <Route path="/teams/:id" element={<TeamDetails />} />
                 <Route path="/matches" element={<Matches />} />
-                
+
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
             </Routes>
-        </BrowserRouter>
+        </AuthProvider>
+    </BrowserRouter>
 
     )
   
