@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard"
 import ForgotPassword from "./pages/ForgotPassword"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ResetPassword from "./pages/ResetPassword"
+import MatchDetails from "./pages/MatchDetails"
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/players/:id" element={<PlayerProfile />} />
                 <Route path="/teams/:id" element={<TeamDetails />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/matches/:id" element={<MatchDetails />} />
 
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
