@@ -20,3 +20,19 @@ function formatTime(dateStr) {
         minute: "2-digit",
     })
 }
+
+function TeamColumn({ team }) {
+    return (
+        <Link
+            to={`/teams/${team.id}`}
+            className="flex-1 flex flex-col items-center gap-3 text-center min-w-0 group"
+        >
+            <span className="w-20 h-20 rounded-full bg-pitch flex items-center justify-center font-display text-chalk/60 text-2xl shrink-0 border border-line group-hover:border-floodlight transition-colors">
+                {team.name.charAt(0)}
+            </span>
+            <span className="font-display uppercase tracking-wide text-lg text-chalk truncate max-w-full group-hover:text-floodlight transition-colors">
+                {team.name}
+            </span>
+        </Link>
+    )
+}
