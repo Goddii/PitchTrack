@@ -13,3 +13,10 @@ function formatDate(dateStr) {
         year: "numeric",
     })
 }
+
+function formatTime(dateStr) {
+    return new Date(dateStr).toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+    })
+}
