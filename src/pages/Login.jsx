@@ -15,3 +15,16 @@ export default function Login() {
     const [submitting, setSubmitting] = useState(false);
 
     const redirectTo = location.state?.from?.pathname || "/dashboard"
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setSubmitting(true);
+        try {
+            await login(email.trim().toLowerCase(), password);
+            navigate(redirectTo, { replace: true });
+        } catch (err) {
+            setError(err.message || "Something went wrong logging you in");
+        } finally {
+            setSubmitting(false);
+        }
+    };
