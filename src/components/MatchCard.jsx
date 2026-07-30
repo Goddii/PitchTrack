@@ -1,13 +1,4 @@
-function Crest( {name} ) {
-    return (
-        <span className="w-7 h-7 rounded-full bg-pitch flex items-center justify-center shrink-0 font-display text-[11px] text-chalk/60">
-            {name ?.charAt(0) ?? "?"}
-        </span>
-    )
-}
-
-
-
+import TeamEmblem from "./TeamEmblem"
 
 export default function MatchCard({ match }) {
     const date = new Date(match.match_date)
