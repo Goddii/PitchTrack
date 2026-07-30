@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ArrowRight, Trophy, Users, ShieldCheck } from "lucide-react"; 
 import { Link } from "react-router-dom";   
-import Navbar from "./Navbar"; 
+import PublicNavbar from "./PublicNavbar"; 
 import heroPlayer from "../assets/soccer.png"  
 
 /*  stat card for the hero overlay */
@@ -104,7 +104,7 @@ export default function Hero() {
           <div className="hero-bg-grain" aria-hidden="true" />
     
           {/* ── Navigation ── */}
-          <Navbar transparent />
+          <PublicNavbar transparent />
     
           {/* ── Content grid ── */}
           <div className="hero-content">
