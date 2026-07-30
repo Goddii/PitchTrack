@@ -1,3 +1,6 @@
+# Skills (AI agent instructions — not part of the codebase)
+.agents/
+
 # Logs
 logs
 *.log
