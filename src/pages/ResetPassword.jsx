@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, AlertCircle, CheckCircle2 } from "lucide-react";
-import Navbar from "../components/Navbar";
+import PublicNavbar from "../components/PublicNavbar";
 import api from "../services/api";
 
 export default function ResetPassword() {
@@ -45,7 +45,7 @@ export default function ResetPassword() {
     };
     return (
         <div>
-            <Navbar />
+            <PublicNavbar />
 
             <section className="max-w-md mx-auto px-6 py-20">
                 <h1 className="font-display uppercase tracking-wide text-3xl text-chalk mb-2">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, AlertCircle } from "lucide-react";
-import Navbar from "../components/Navbar";
+import PublicNavbar from "../components/PublicNavbar";
 import { useAuth } from "../context/AuthContext"
 
 export default function Register() {
@@ -40,7 +40,7 @@ export default function Register() {
     };
     return (
         <div>
-            <Navbar />
+            <PublicNavbar />
 
             <section className="max-w-md mx-auto px-6 py-20">
                 <h1 className="font-display uppercase tracking-wide text-3xl text-chalk mb-2">
