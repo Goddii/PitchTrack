@@ -1,4 +1,6 @@
-import { ShieldCheck, Users, Trophy, Calendar } from "react";
+import { ShieldCheck, Users, Trophy, Calendar } from "lucide-react";
+import WhySection from "../components/WhySection";
+import HomeSpotlight from "../components/HomeSpotlight";
 import Hero from "../components/Hero";
 import HowItWorks from "../components/HowItWorks";
 import CTASection from "../components/CTASection";
@@ -35,7 +37,11 @@ export default function Home() {
 
                 </section>
 
+                <HomeSpotlight />
+
                 <HowItWorks />
+
+                <WhySection />
 
                 <CTASection />
 
