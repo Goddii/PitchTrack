@@ -15,6 +15,7 @@ import ForgotPassword from "./pages/ForgotPassword"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ResetPassword from "./pages/ResetPassword"
 import MatchDetails from "./pages/MatchDetails"
+import AdminPanel from "./pages/AdminPanel"
 
 
 function App() {
@@ -41,6 +42,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute adminOnly>
+                            <AdminPanel />
                         </ProtectedRoute>
                     }
                 />
