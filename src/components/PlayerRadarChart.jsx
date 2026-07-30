@@ -1,5 +1,5 @@
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from "recharts";
-
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from "recharts"
+import { computeOverallRating, ratingTier } from "../utils/playerRating"
 
 const ATTRIBUTE_LABELS = {
     pace: "Pace",
@@ -16,29 +16,35 @@ const ATTRIBUTE_LABELS = {
     positioning: "Positioning",
 }
 
-// no color sat here on purpose
-const chartConfig = { value: { label : "Rating "}}
-
-function ratingTier(score) {
-    if (score >= 7.5) return { className: "text-emerald-400 border-emerald-400/40 bg-emerald-400/10"}
-    if (score >= 6) return { className: "text-amber-400 border-amber-400/40 bg-amber-400/10"}
-    return {className: "text-red-400 border-red-400/40 bg-red-400/10"}
-}
-
 export default function PlayerRadarChart({ attributes }) {
+    if (!attributes || typeof attributes !== "object" || Object.keys(attributes).length === 0) {
+        return (
+            <div className="bg-pitch/10 border border-line rounded-lg p-6">
+                <h3 className="font-display uppercase tracking-wide text-lg text-chalk mb-2">Player Strength</h3>
+                <div className="flex items-center justify-center h-[200px] border border-dashed border-line/40 rounded-xl">
+                    <p className="font-body text-sm text-chalk/40 text-center max-w-xs">
+                        No attribute data available yet.
+                    </p>
+                </div>
+                <p className="font-body text-[11px] text-chalk/35 text-center mt-4">
+                    Attributes will appear here once they are assigned via the admin panel.
+                </p>
+            </div>
+        )
+    }
+
     const chartData = Object.entries(attributes).map(([key, value]) => ({
         attribute: ATTRIBUTE_LABELS[key] ?? key, value
     }))
 
-    const values = Object.values(attributes)
-    const overall = Math.round(values.reduce((sum, v) => sum + v, 0) / values.length) /10
-    const tier = ratingTier(overall)
+    const overall = computeOverallRating(attributes)
+    const tierClass = overall !== null ? ratingTier(overall) : ""
 
     return (
         <div className="bg-pitch/10 border border-line rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
                 <h3 className="font-display uppercase tracking-wide text-lg text-chalk">Player Strength</h3>
-                <div className={`flex items-center justify-center w-14 h-14 rounded-full border-2 shrink-0 ${tier.className}`}>
+                <div className={`flex items-center justify-center w-14 h-14 rounded-full border-2 shrink-0 ${tierClass}`}>
                     <span className="font-display text-lg font-bold"> {overall.toFixed(1)} </span>
                 </div>
             </div>
