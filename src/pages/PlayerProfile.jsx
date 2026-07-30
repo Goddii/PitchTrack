@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, UserX} from "lucide-react"
-import Navbar from "../components/Navbar"
+import { useAuth } from "../context/AuthContext"
+import PublicNavbar from "../components/PublicNavbar"
 import PlayerRadarChart from "../components/PlayerRadarChart"
 import EmptyState from "../components/EmptyState"
-import { MOCK_PLAYERS } from "../data/mockData"
+import api from "../services/api"
 
 
 const WALKIN_STYLES = `
@@ -38,27 +39,33 @@ const WALKIN_STYLES = `
 `;
 
 export default function PlayerProfile() {
+    const { user } = useAuth()
     const { id } = useParams();
     const [player, setPlayer ] = useState(null)
     const [loading, setLoading] = useState(true)
 
 
-    //todo replace with fetch api/players/&{id}
-
     useEffect(() => {
+        let cancelled = false
         setLoading(true)
-        const timer = setTimeout(() => {
-            const found = MOCK_PLAYERS.find((p) => String(p.id) === String(id))
-            setPlayer(found ?? null)
-            setLoading(false)
-        }, 400)
-        return () => clearTimeout(timer)
+        api.players
+            .get(id)
+            .then((data) => {
+                if (!cancelled) setPlayer(data)
+            })
+            .catch(() => {
+                if (!cancelled) setPlayer(null)
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false)
+            })
+        return () => { cancelled = true }
     }, [id])
 
     if (loading) {
         return (
             <div>
-                <Navbar />
+                <PublicNavbar user={user} />
                 <div className="max-w-7xl mx-auto px-6 md:px-10 py-24 animate-pulse">
                     <div className="h-8 w-56 bg-line/30 rounded mb-4"/>
                     <div className="h-4 w-36 bg-line/20 rounded"/>
@@ -71,7 +78,7 @@ export default function PlayerProfile() {
     if (!player) {
         return (
             <div>
-                <Navbar />
+                <PublicNavbar user={user} />
                 <EmptyState 
                 icon={UserX}
                 title="Player not found"
@@ -92,7 +99,7 @@ export default function PlayerProfile() {
     return (
         <div key={player.id}>
             <style>{WALKIN_STYLES}</style>
-            <Navbar />
+            <PublicNavbar user={user} />
 
             <section className="bg-gradient to-b from-night to-pitch/20 border-b border-line">
                 <div className="max-w-7xl mx-auto px-6 md:px-10 py-14">

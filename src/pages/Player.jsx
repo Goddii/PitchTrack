@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchX } from "lucide-react";
-import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
+import PublicNavbar from "../components/PublicNavbar";
 import PlayerCard from "../components/PlayerCard";
 import PlayerCardSkeleton from "../components/PlayerCardSkeleton"
 import SearchBar from "../components/SearchBar"
 import FilterDropdown from "../components/FilterDropdown"
 import EmptyState from "../components/EmptyState";
-import { MOCK_PLAYERS } from "../data/mockData"
+import api from "../services/api"
 
 
 const POSITIONS = [
@@ -19,6 +20,7 @@ const POSITIONS = [
 ]
 
 export default function Players() {
+    const { user } = useAuth()
     const [searchParams, setSearchParams] = useSearchParams()
 
     const [players, setPlayers] = useState([])
@@ -29,13 +31,17 @@ export default function Players() {
     const [debouncedQuery, setDebouncedQuery] = useState(query)
 
 
-    //todo replace with fetch api/players
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setPlayers(MOCK_PLAYERS)
-            setLoading(false)
-        }, 600)
-        return () => clearTimeout(timer)
+        let cancelled = false
+        api.players
+            .list()
+            .then((data) => {
+                if (!cancelled) setPlayers(data)
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false)
+            })
+        return () => { cancelled = true }
     }, [])
 
     useEffect(() => {
@@ -70,7 +76,7 @@ export default function Players() {
 
     return (
         <div>
-            <Navbar />
+            <PublicNavbar user={user} />
             <section className="max-w-7xl mx-auto px-6 md:px-10 py-16">
                 <div className="mb-8">
                     <h1 className="font-display uppercase tracking-wide text-3xl text-chalk mb-2"> Players </h1>
