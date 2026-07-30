@@ -66,7 +66,7 @@ export function AuthProvider({ children }){
         updateProfile,
     }
 
-    return <AuthContext.Provider value={children}> {children} </AuthContext.Provider>
+    return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>
 }
 
 export function useAuth() {
