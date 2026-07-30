@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, Lock, AlertCircle } from "lucide-react";
-import Navbar from "../components/Navbar";
+import PublicNavbar from "../components/PublicNavbar";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -14,13 +14,15 @@ export default function Login() {
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    const redirectTo = location.state?.from?.pathname || "/dashboard"
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setSubmitting(true);
         try {
-            await login(email.trim().toLowerCase(), password);
+            const userData = await login(email.trim().toLowerCase(), password);
+            // Role-based redirect
+            const fallback = userData?.role === "admin" ? "/admin" : "/dashboard"
+            const redirectTo = location.state?.from?.pathname || fallback
             navigate(redirectTo, { replace: true });
         } catch (err) {
             setError(err.message || "Something went wrong logging you in");
@@ -30,7 +32,7 @@ export default function Login() {
     };
     return (
         <div>
-            <Navbar />
+            <PublicNavbar />
 
             <section className="max-w-md mx-auto px-6 py-20">
                 <h1 className="font-display uppercase tracking-wide text-3xl text-chalk mb-2">

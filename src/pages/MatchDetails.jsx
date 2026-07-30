@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, MapPin, Calendar, CalendarX } from "lucide-react"
-import Navbar from "../components/Navbar"
+import { useAuth } from "../context/AuthContext"
+import PublicNavbar from "../components/PublicNavbar"
 import EmptyState from "../components/EmptyState"
-import { MOCK_MATCHES } from "../data/mockData"
+import api from "../services/api"
 
 function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString(undefined, {
@@ -37,25 +38,32 @@ function TeamColumn({ team }) {
     )
 }
 export default function MatchDetails() {
+    const { user } = useAuth()
     const { id } = useParams()
     const [match, setMatch] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    //todo replace with fetch api/matches/${id}
     useEffect(() => {
+        let cancelled = false
         setLoading(true)
-        const timer = setTimeout(() => {
-            const found = MOCK_MATCHES.find((m) => String(m.id) === String(id))
-            setMatch(found ?? null)
-            setLoading(false)
-        }, 400)
-        return () => clearTimeout(timer)
+        api.matches
+            .get(id)
+            .then((data) => {
+                if (!cancelled) setMatch(data)
+            })
+            .catch(() => {
+                if (!cancelled) setMatch(null)
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false)
+            })
+        return () => { cancelled = true }
     }, [id])
 
     if (loading) {
         return (
             <div>
-                <Navbar />
+                <PublicNavbar user={user} />
                 <div className="max-w-7xl mx-auto px-6 md:px-10 py-24 animate-pulse">
                     <div className="h-8 w-64 bg-line/30 rounded mb-4" />
                     <div className="h-4 w-40 bg-line/20 rounded" />
@@ -67,7 +75,7 @@ export default function MatchDetails() {
     if (!match) {
         return (
             <div>
-                <Navbar />
+                <PublicNavbar user={user} />
                 <EmptyState
                     icon={CalendarX}
                     title="Match not found"
@@ -87,7 +95,7 @@ export default function MatchDetails() {
 
     return (
         <div>
-            <Navbar />
+            <PublicNavbar user={user} />
 
             {/* Hero */}
             <section className="bg-gradient-to-b from-night to-pitch/20 border-b border-line">
