@@ -11,7 +11,7 @@ export default function ForgotPassword() {
     const [submitted, setSubmitted] = useState(false);
     // TODO: once real email delivery is wired up on the backend, drop this -
     // the token is only surfaced here because there's no email provider yet.
-    const [devResetToken, setDevResetToken] = useState(null);
+   
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,7 +20,6 @@ export default function ForgotPassword() {
         try {
             const data = await api.auth.forgotPassword({ email: email.trim().toLowerCase() });
             setSubmitted(true);
-            setDevResetToken(data?.reset_token || null);
         } catch (err) {
             setError(err.message || "Something went wrong");
         } finally {
@@ -46,19 +45,7 @@ export default function ForgotPassword() {
                             <span>If an account with that email exists, a reset link has been generated.</span>
                         </div>
 
-                        {devResetToken && (
-                            <div className="bg-pitch/10 border border-line rounded-lg px-4 py-4">
-                                <p className="font-body text-xs uppercase tracking-widest2 text-chalk/50 mb-2">
-                                    Dev mode - no email provider configured yet
-                                </p>
-                                <Link
-                                    to={`/reset-password?email=${encodeURIComponent(email.trim().toLowerCase())}&token=${devResetToken}`}
-                                    className="font-body text-sm text-floodlight hover:text-chalk transition-colors break-all"
-                                >
-                                    Continue to reset password →
-                                </Link>
-                            </div>
-                        )}
+
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
