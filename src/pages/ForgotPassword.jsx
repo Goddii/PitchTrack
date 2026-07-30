@@ -9,8 +9,7 @@ export default function ForgotPassword() {
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    // TODO: once real email delivery is wired up on the backend, drop this -
-    // the token is only surfaced here because there's no email provider yet.
+  
    
 
     const handleSubmit = async (e) => {
@@ -44,8 +43,6 @@ export default function ForgotPassword() {
                             <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-floodlight" />
                             <span>If an account with that email exists, a reset link has been generated.</span>
                         </div>
-
-
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
