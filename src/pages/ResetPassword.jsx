@@ -9,7 +9,7 @@ export default function ResetPassword() {
     const navigate = useNavigate();
 
     const [email, setEmail] = useState(searchParams.get("email") || "");
-    const [token, setToken] = useState(searchParams.get("token") || "");
+    const token = searchParams.get("token") || "";
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
@@ -77,18 +77,6 @@ export default function ResetPassword() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="you@example.com"
-                                className="w-full bg-pitch/10 border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/40 focus:outline-none focus:border-floodlight transition-colors"
-                            />
-                        </label>
-
-                        <label className="flex flex-col gap-2">
-                            <span className="font-body text-xs uppercase tracking-widest2 text-chalk/50">Reset Token</span>
-                            <input
-                                type="text"
-                                required
-                                value={token}
-                                onChange={(e) => setToken(e.target.value)}
-                                placeholder="Paste the token from your reset link"
                                 className="w-full bg-pitch/10 border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/40 focus:outline-none focus:border-floodlight transition-colors"
                             />
                         </label>
