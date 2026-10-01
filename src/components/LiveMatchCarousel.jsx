@@ -33,7 +33,7 @@ export default function LiveMatchCarousel({ matches, loading }) {
     if (!matches.length) {
         return (
             <div className="bg-pitch/10 border border-line rounded-lg p-8 text-center lg:sticky lg:top-6">
-                <p className="font-body text-sm text-chalk/50"> No matches live right now</p>
+                <p className="font-body text-sm text-chalk/60"> No matches live right now</p>
             </div>
         )
     }
@@ -51,7 +51,7 @@ export default function LiveMatchCarousel({ matches, loading }) {
                         <span className="w-1.5 h-1.5 rounded-full bg-floodlight animate-pulse"/>
                         Live now
                     </span>
-                    <span className="font-body text-xs text-chalk/40"> {index + 1}/{match.length}</span>
+                    <span className="font-body text-xs text-chalk/60"> {index + 1}/{matches.length}</span>
 
                 </div>
                 <div aria-live="polite" className="flex items-center justify-between gap-3 mb-6">
@@ -69,7 +69,7 @@ export default function LiveMatchCarousel({ matches, loading }) {
                             {match.home_score} - {match.away_score}
 
                         </span>
-                        <span className="font-body text-xs text-floodlight font-semibold mt-1"> {match.minute} </span>
+                        <span className="font-body text-xs text-floodlight font-semibold mt-1"> {match.minute}&prime; </span>
 
                     </div>
                     <div className="flex-1 flex flex-col items-center gap-2 text-center min-w-0">
@@ -84,7 +84,7 @@ export default function LiveMatchCarousel({ matches, loading }) {
 
                 </div>
 
-                <p className="font-body text-xs text-chalk/40 text-center mb-6"> {match.venue}</p>
+                <p className="font-body text-xs text-chalk/60 text-center mb-6"> {match.venue}</p>
 
                 <div className="flex items-center justify-between">
                     <button 

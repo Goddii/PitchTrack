@@ -23,8 +23,10 @@ export default function AdminSidebar({ children }) {
     const [profileOpen, setProfileOpen] = useState(false)
 
     const isActive = (item) => {
-        if (item.to === "/admin" && !item.tab) return !location.search.includes("tab=")
-        if (item.tab) return location.search === `?tab=${item.tab}`
+        // Pages under /admin/matches/... (such as match stats) belong to the Matches section
+        if (item.tab === "matches" && location.pathname.startsWith("/admin/matches")) return true
+        if (item.to === "/admin" && !item.tab) return location.pathname === "/admin" && !location.search.includes("tab=")
+        if (item.tab) return location.pathname === "/admin" && location.search === `?tab=${item.tab}`
         return false
     }
 
@@ -33,7 +35,8 @@ export default function AdminSidebar({ children }) {
         navigate("/login")
     }
 
-    const SidebarContent = ({ collapsed }) => (
+    // Plain render function (not a component) so it isn't remounted on every render
+    const renderSidebarContent = (collapsed) => (
         <>
             {/* Logo */}
             <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between"} px-4 h-16 border-b border-glass-border shrink-0`}>
@@ -48,7 +51,7 @@ export default function AdminSidebar({ children }) {
                 {!collapsed && (
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="p-1.5 rounded-lg text-chalk/30 hover:text-chalk hover:bg-chalk/5 transition-colors hidden lg:block"
+                        className="p-1.5 rounded-lg text-chalk/60 hover:text-chalk hover:bg-chalk/5 transition-colors hidden lg:block"
                         aria-label="Collapse sidebar"
                     >
                         <ChevronLeft size={16} />
@@ -65,7 +68,7 @@ export default function AdminSidebar({ children }) {
                         className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-lg font-body text-sm font-medium transition-all duration-200 ${
                             isActive(item)
                                 ? "bg-floodlight/10 text-floodlight"
-                                : "text-chalk/50 hover:text-chalk hover:bg-chalk/5"
+                                : "text-chalk/60 hover:text-chalk hover:bg-chalk/5"
                         }`}
                         title={collapsed ? item.label : undefined}
                     >
@@ -80,7 +83,7 @@ export default function AdminSidebar({ children }) {
                 {collapsed ? (
                     <button
                         onClick={handleLogout}
-                        className="p-2 rounded-lg text-chalk/40 hover:text-flare hover:bg-flare/5 transition-colors"
+                        className="p-2 rounded-lg text-chalk/60 hover:text-flare hover:bg-flare/5 transition-colors"
                         aria-label="Sign out"
                     >
                         <LogOut size={18} />
@@ -92,11 +95,11 @@ export default function AdminSidebar({ children }) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-body text-sm text-chalk/80 truncate">{user?.name || "Admin"}</p>
-                            <p className="font-body text-[10px] uppercase tracking-widest2 text-floodlight/70">Admin</p>
+                            <p className="font-body text-xs uppercase tracking-widest2 text-floodlight/70">Admin</p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="p-1.5 rounded-lg text-chalk/30 hover:text-flare transition-colors"
+                            className="p-1.5 rounded-lg text-chalk/60 hover:text-flare transition-colors"
                             aria-label="Sign out"
                         >
                             <LogOut size={15} />
@@ -115,13 +118,13 @@ export default function AdminSidebar({ children }) {
                     sidebarOpen ? "w-60" : "w-16"
                 }`}
             >
-                <SidebarContent collapsed={!sidebarOpen} />
+                {renderSidebarContent(!sidebarOpen)}
 
                 {/* Expand button when collapsed */}
                 {!sidebarOpen && (
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="absolute left-4 bottom-20 p-1.5 rounded-lg text-chalk/30 hover:text-chalk hover:bg-chalk/5 transition-colors hidden lg:flex"
+                        className="absolute left-4 bottom-20 p-1.5 rounded-lg text-chalk/60 hover:text-chalk hover:bg-chalk/5 transition-colors hidden lg:flex"
                         aria-label="Expand sidebar"
                     >
                         <ChevronRight size={16} />
@@ -143,13 +146,13 @@ export default function AdminSidebar({ children }) {
                             </span>
                             <button
                                 onClick={() => setMobileOpen(false)}
-                                className="p-1.5 rounded-lg text-chalk/40 hover:text-chalk transition-colors"
+                                className="p-1.5 rounded-lg text-chalk/60 hover:text-chalk transition-colors"
                                 aria-label="Close sidebar"
                             >
                                 <X size={18} />
                             </button>
                         </div>
-                        <SidebarContent collapsed={false} />
+                        {renderSidebarContent(false)}
                     </aside>
                 </div>
             )}
@@ -160,20 +163,20 @@ export default function AdminSidebar({ children }) {
                 <header className="h-14 border-b border-glass-border bg-night/80 backdrop-blur-lg flex items-center justify-between px-4 md:px-6 shrink-0">
                     <div className="flex items-center gap-3">
                         <button
-                            className="lg:hidden p-2 rounded-lg text-chalk/50 hover:text-chalk hover:bg-chalk/5 transition-colors"
+                            className="lg:hidden p-2 rounded-lg text-chalk/60 hover:text-chalk hover:bg-chalk/5 transition-colors"
                             onClick={() => setMobileOpen(true)}
                             aria-label="Open sidebar"
                         >
                             <Menu size={18} />
                         </button>
-                        <span className="font-display text-sm uppercase tracking-widest2 text-chalk/40 hidden sm:block">
+                        <span className="font-display text-sm uppercase tracking-widest2 text-chalk/60 hidden sm:block">
                             Admin Panel
                         </span>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <button
-                            className="p-2 rounded-lg text-chalk/40 hover:text-chalk hover:bg-chalk/5 transition-colors relative"
+                            className="p-2 rounded-lg text-chalk/60 hover:text-chalk hover:bg-chalk/5 transition-colors relative"
                             aria-label="Notifications"
                         >
                             <Bell size={17} />
@@ -209,7 +212,7 @@ export default function AdminSidebar({ children }) {
                                                 setProfileOpen(false)
                                                 handleLogout()
                                             }}
-                                            className="flex items-center gap-3 w-full px-4 py-2.5 font-body text-sm text-flare/70 hover:text-flare hover:bg-flare/5 transition-colors"
+                                            className="flex items-center gap-3 w-full px-4 py-2.5 font-body text-sm text-flare hover:text-flare hover:bg-flare/5 transition-colors"
                                         >
                                             <LogOut size={15} />
                                             Sign Out
@@ -222,7 +225,7 @@ export default function AdminSidebar({ children }) {
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 overflow-y-auto">
+                <main id="main" className="flex-1 overflow-y-auto">
                     {children}
                 </main>
             </div>

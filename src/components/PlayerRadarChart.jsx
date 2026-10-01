@@ -1,20 +1,6 @@
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from "recharts"
 import { computeOverallRating, ratingTier } from "../utils/playerRating"
-
-const ATTRIBUTE_LABELS = {
-    pace: "Pace",
-    shooting: "Shooting",
-    passing: "Passing",
-    dribbling: "Dribbling",
-    defending: "Defending",
-    physical: "Physical",
-    diving: "Diving",
-    handling: "Handling",
-    kicking: "Kicking",
-    reflexes: "Reflexes",
-    speed: "Speed",
-    positioning: "Positioning",
-}
+import { attributeLabel } from "../utils/playerAttributes"
 
 export default function PlayerRadarChart({ attributes }) {
     if (!attributes || typeof attributes !== "object" || Object.keys(attributes).length === 0) {
@@ -22,11 +8,11 @@ export default function PlayerRadarChart({ attributes }) {
             <div className="bg-pitch/10 border border-line rounded-lg p-6">
                 <h3 className="font-display uppercase tracking-wide text-lg text-chalk mb-2">Player Strength</h3>
                 <div className="flex items-center justify-center h-[200px] border border-dashed border-line/40 rounded-xl">
-                    <p className="font-body text-sm text-chalk/40 text-center max-w-xs">
+                    <p className="font-body text-sm text-chalk/60 text-center max-w-xs">
                         No attribute data available yet.
                     </p>
                 </div>
-                <p className="font-body text-[11px] text-chalk/35 text-center mt-4">
+                <p className="font-body text-xs text-chalk/60 text-center mt-4">
                     Attributes will appear here once they are assigned via the admin panel.
                 </p>
             </div>
@@ -34,14 +20,14 @@ export default function PlayerRadarChart({ attributes }) {
     }
 
     const chartData = Object.entries(attributes).map(([key, value]) => ({
-        attribute: ATTRIBUTE_LABELS[key] ?? key, value
+        attribute: attributeLabel(key), value
     }))
 
     const overall = computeOverallRating(attributes)
     const tierClass = overall !== null ? ratingTier(overall) : ""
 
     return (
-        <div className="bg-pitch/10 border border-line rounded-lg p-6">
+        <div className="flex flex-col bg-pitch/10 border border-line rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
                 <h3 className="font-display uppercase tracking-wide text-lg text-chalk">Player Strength</h3>
                 <div className={`flex items-center justify-center w-14 h-14 rounded-full border-2 shrink-0 ${tierClass}`}>
@@ -49,7 +35,7 @@ export default function PlayerRadarChart({ attributes }) {
                 </div>
             </div>
 
-            <div className="mx-auto aspect-square max-h-[300px] w-full text-chalk/50">
+            <div className="mx-auto my-auto aspect-square max-h-[300px] w-full text-chalk/60">
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={chartData} outerRadius="72%">
                         <Tooltip
@@ -63,8 +49,8 @@ export default function PlayerRadarChart({ attributes }) {
                 </ResponsiveContainer>
             </div>
 
-            <p className="font-body text-[11px] text-chalk/35 text-center mt-1">
-                Overall is a simple average of the attributes above - a placeholder until real match data drives this
+            <p className="font-body text-xs text-chalk/60 text-center mt-1">
+                Overall rating is the average of the attributes above
             </p>
 
         </div>

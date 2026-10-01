@@ -1,6 +1,6 @@
 import { memo, useState } from "react"
 import { Link } from "react-router-dom"
-import { MapPin, Clock, Play, ChevronRight, User, Sun, Users } from "lucide-react"
+import { MapPin, Clock, Play, ChevronRight } from "lucide-react"
 import MatchStatusBadge from "./MatchStatusBadge"
 import TeamEmblem from "./TeamEmblem"
 import football1 from "../assets/football1.png"
@@ -74,14 +74,14 @@ function FeaturedMatchHero({ match }) {
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-10 py-24 md:py-36 lg:py-44">
         {/* Breadcrumb / Competition */}
         <div className="flex items-center gap-2 mb-8 md:mb-10">
-          <div className="w-8 h-8 rounded-full bg-floodlight/20 flex items-center justify-center font-display text-[11px] font-bold text-floodlight ring-1 ring-floodlight/30">
+          <div className="w-8 h-8 rounded-full bg-floodlight/20 flex items-center justify-center font-display text-xs font-bold text-floodlight ring-1 ring-floodlight/30">
             PT
           </div>
-          <span className="font-body text-[11px] uppercase tracking-widest2 text-chalk/50">
+          <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">
             PitchTrack League
           </span>
-          <ChevronRight size={12} className="text-chalk/30" aria-hidden="true" />
-          <span className="font-body text-[11px] uppercase tracking-widest2 text-chalk/60">
+          <ChevronRight size={12} className="text-chalk/60" aria-hidden="true" />
+          <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">
             Featured Match
           </span>
         </div>
@@ -94,7 +94,7 @@ function FeaturedMatchHero({ match }) {
             <p className="font-display text-xl lg:text-3xl font-bold text-chalk uppercase tracking-wide text-center lg:text-right leading-tight">
               {match.home_team?.name ?? "TBD"}
             </p>
-            <span className="font-body text-[10px] uppercase tracking-[0.25em] text-chalk/40">
+            <span className="font-body text-xs uppercase tracking-[0.25em] text-chalk/60">
               Home
             </span>
           </div>
@@ -113,7 +113,7 @@ function FeaturedMatchHero({ match }) {
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                <span className="font-display text-4xl md:text-5xl font-bold text-chalk/30 uppercase tracking-widest">
+                <span className="font-display text-4xl md:text-5xl font-bold text-chalk/60 uppercase tracking-widest">
                   VS
                 </span>
               </div>
@@ -131,7 +131,7 @@ function FeaturedMatchHero({ match }) {
             <p className="font-display text-xl lg:text-3xl font-bold text-chalk uppercase tracking-wide text-center lg:text-left leading-tight">
               {match.away_team?.name ?? "TBD"}
             </p>
-            <span className="font-body text-[10px] uppercase tracking-[0.25em] text-chalk/40">
+            <span className="font-body text-xs uppercase tracking-[0.25em] text-chalk/60">
               Away
             </span>
           </div>
@@ -140,30 +140,18 @@ function FeaturedMatchHero({ match }) {
         {/* ── Match Info ── */}
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-10 pt-6 border-t border-chalk/10 max-w-2xl mx-auto">
           {match.venue && (
-            <div className="flex items-center gap-2 text-chalk/50">
+            <div className="flex items-center gap-2 text-chalk/60">
               <MapPin size={13} aria-hidden="true" />
               <span className="font-body text-sm">{match.venue}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 text-chalk/50">
+          <div className="flex items-center gap-2 text-chalk/60">
             <Clock size={13} aria-hidden="true" />
             <span className="font-body text-sm">
               {match.status === "scheduled"
                 ? `${formattedDate} · ${formattedTime}`
                 : formattedDate}
             </span>
-          </div>
-          <div className="flex items-center gap-2 text-chalk/40">
-            <User size={12} aria-hidden="true" />
-            <span className="font-body text-xs">Ref: James Mwangi</span>
-          </div>
-          <div className="flex items-center gap-2 text-chalk/40">
-            <Sun size={12} aria-hidden="true" />
-            <span className="font-body text-xs">22°C · Clear</span>
-          </div>
-          <div className="flex items-center gap-2 text-chalk/40">
-            <Users size={12} aria-hidden="true" />
-            <span className="font-body text-xs">12,430 attending</span>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react"
+import { useMemo, useState, useCallback } from "react"
 import { Link } from "react-router-dom"
 import {
     Star, LogOut, User, Mail, Save,
@@ -12,11 +12,13 @@ import TeamcardSkeleton from "../components/TeamcardSkeleton"
 import EmptyState from "../components/EmptyState"
 import DashboardStatCard from "../components/DashboardStatCard"
 import { useAuth } from "../context/AuthContext"
+import ErrorState from "../components/ErrorState"
+import { useAsync } from "../hooks/useAsync"
 import api from "../services/api"
 
-/* ─────────────────────────────────────────────
+/*
    Sub-components (Dashboard-specific)
-   ───────────────────────────────────────────── */
+   */
 
 function SectionHeader({ title, action }) {
     return (
@@ -43,7 +45,7 @@ function LiveMatchCard({ match }) {
         >
             <div className="flex items-center gap-2 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-floodlight animate-pulse" />
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-floodlight">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-floodlight">
                     Live · {match.minute}&prime;
                 </span>
             </div>
@@ -57,7 +59,7 @@ function LiveMatchCard({ match }) {
                     <span className="font-display text-xl font-bold text-chalk tabular-nums">
                         {match.home_score}
                     </span>
-                    <span className="font-body text-xs text-chalk/30">-</span>
+                    <span className="font-body text-xs text-chalk/60">-</span>
                     <span className="font-display text-xl font-bold text-chalk tabular-nums">
                         {match.away_score}
                     </span>
@@ -69,7 +71,7 @@ function LiveMatchCard({ match }) {
                 </div>
             </div>
             {match.venue && (
-                <p className="font-body text-[11px] text-chalk/40 mt-3 truncate">{match.venue}</p>
+                <p className="font-body text-xs text-chalk/60 mt-3 truncate">{match.venue}</p>
             )}
         </Link>
     )
@@ -87,17 +89,17 @@ function FixtureCard({ match }) {
         >
             <div className="flex items-center gap-4 min-w-0">
                 <div className="flex flex-col items-center shrink-0">
-                    <span className="font-body text-[10px] uppercase tracking-widest2 text-chalk/40">{day}</span>
+                    <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">{day}</span>
                 </div>
                 <div className="min-w-0">
                     <p className="font-body text-sm text-chalk truncate group-hover:text-floodlight transition-colors">
                         {match.home_team?.name} vs {match.away_team?.name}
                     </p>
-                    <p className="font-body text-xs text-chalk/40 mt-0.5">{time}</p>
+                    <p className="font-body text-xs text-chalk/60 mt-0.5">{time}</p>
                 </div>
             </div>
             {match.venue && (
-                <span className="font-body text-[11px] text-chalk/30 hidden sm:block truncate max-w-[160px] text-right">
+                <span className="font-body text-xs text-chalk/60 hidden sm:block truncate max-w-[160px] text-right">
                     {match.venue}
                 </span>
             )}
@@ -112,7 +114,7 @@ function ResultCard({ match }) {
             className="group flex items-center justify-between bg-glass-bg border border-glass-border rounded-xl px-5 py-4 hover:border-chalk/15 hover:bg-chalk/[0.02] transition-all duration-200"
         >
             <div className="flex items-center gap-4 min-w-0">
-                <span className="font-body text-[10px] uppercase tracking-widest2 text-chalk/40 shrink-0">FT</span>
+                <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60 shrink-0">FT</span>
                 <div className="min-w-0">
                     <p className="font-body text-sm text-chalk truncate group-hover:text-floodlight transition-colors">
                         {match.home_team?.name} vs {match.away_team?.name}
@@ -121,7 +123,7 @@ function ResultCard({ match }) {
             </div>
             <div className="flex items-center gap-2 shrink-0 font-display text-base font-bold tabular-nums text-chalk">
                 <span>{match.home_score}</span>
-                <span className="text-chalk/30 text-sm">-</span>
+                <span className="text-chalk/60 text-sm">-</span>
                 <span>{match.away_score}</span>
             </div>
         </Link>
@@ -142,10 +144,10 @@ function QuickLink({ to, icon: Icon, label, description }) {
                     {label}
                 </p>
                 {description && (
-                    <p className="font-body text-xs text-chalk/40 mt-0.5">{description}</p>
+                    <p className="font-body text-xs text-chalk/60 mt-0.5">{description}</p>
                 )}
             </div>
-            <ChevronRight size={15} className="text-chalk/20 group-hover:text-floodlight/50 transition-colors shrink-0" />
+            <ChevronRight size={15} className="text-chalk/20 group-hover:text-floodlight/70 transition-colors shrink-0" />
         </Link>
     )
 }
@@ -196,10 +198,8 @@ function ListSkeleton({ rows = 3 }) {
 export default function Dashboard() {
     const { user, logout, updateProfile } = useAuth()
 
-    // Data state
-    const [favorites, setFavorites] = useState([])
-    const [matches, setMatches] = useState([])
-    const [loading, setLoading] = useState(true)
+    // Team ids unfollowed this session (optimistic; restored if the request fails)
+    const [unfollowedIds, setUnfollowedIds] = useState(() => new Set())
 
     // Profile state
     const [name, setName] = useState(user?.name || "")
@@ -209,25 +209,19 @@ export default function Dashboard() {
     const [savingProfile, setSavingProfile] = useState(false)
 
     // ── Data fetching ──
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
-
-        Promise.all([
-            api.favorites.list(),
-            api.matches.list(),
-        ])
-            .then(([favs, matchesData]) => {
-                if (cancelled) return
-                setFavorites(favs)
-                setMatches(matchesData)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-
-        return () => { cancelled = true }
-    }, [])
+    const { data, loading, error, refetch } = useAsync(
+        (signal) =>
+            Promise.all([api.favorites.list({ signal }), api.matches.list({}, { signal })]).then(
+                ([favs, matches]) => ({ favs, matches })
+            ),
+        [],
+        { favs: [], matches: [] }
+    )
+    const matches = data.matches
+    const favorites = useMemo(
+        () => data.favs.filter((f) => !unfollowedIds.has(f.team.id)),
+        [data.favs, unfollowedIds]
+    )
 
     // ── Derived data ──
     const favoriteTeamIds = useMemo(() => new Set(favorites.map((f) => f.team.id)), [favorites])
@@ -268,14 +262,18 @@ export default function Dashboard() {
 
     // ── Handlers ──
     const handleUnfollow = useCallback(async (teamId) => {
-        const prev = favorites
-        setFavorites((f) => f.filter((fav) => fav.team.id !== teamId))
+        setUnfollowedIds((prev) => new Set(prev).add(teamId))
         try {
             await api.favorites.unfollow(teamId)
         } catch {
-            setFavorites(prev)
+            // Restore only this team so concurrent unfollows aren't undone
+            setUnfollowedIds((prev) => {
+                const next = new Set(prev)
+                next.delete(teamId)
+                return next
+            })
         }
-    }, [favorites])
+    }, [])
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault()
@@ -296,6 +294,7 @@ export default function Dashboard() {
         <div className="min-h-screen bg-night">
             <DashboardNav />
 
+            <main id="main">
             {/* ── Hero / Welcome Section ── */}
             <section className="relative overflow-hidden">
                 {/* Background ambient glow */}
@@ -327,6 +326,10 @@ export default function Dashboard() {
 
             {/* ── Main Content ── */}
             <section className="max-w-7xl mx-auto px-6 md:px-10 pb-20">
+                {error && (
+                    <ErrorState error={error} onRetry={refetch} title="Couldn't load your dashboard" />
+                )}
+
                 {/* Stats Cards */}
                 {loading ? (
                     <StatsRowSkeleton />
@@ -470,10 +473,10 @@ export default function Dashboard() {
                             ) : (
                                 <div className="bg-glass-bg border border-glass-border rounded-xl p-6 text-center">
                                     <div className="w-10 h-10 rounded-full bg-chalk/5 flex items-center justify-center mx-auto mb-3">
-                                        <Zap size={18} className="text-chalk/30" />
+                                        <Zap size={18} className="text-chalk/60" />
                                     </div>
-                                    <p className="font-body text-sm text-chalk/50">Nothing live right now</p>
-                                    <p className="font-body text-xs text-chalk/30 mt-1">Check back once kickoff rolls around</p>
+                                    <p className="font-body text-sm text-chalk/60">Nothing live right now</p>
+                                    <p className="font-body text-xs text-chalk/60 mt-1">Check back once kickoff rolls around</p>
                                 </div>
                             )}
                         </div>
@@ -499,27 +502,27 @@ export default function Dashboard() {
                                 )}
 
                                 <label className="flex flex-col gap-1.5">
-                                    <span className="font-body text-[10px] uppercase tracking-widest2 text-chalk/40">Name</span>
+                                    <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">Name</span>
                                     <div className="relative">
-                                        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-chalk/30 pointer-events-none" />
+                                        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-chalk/60 pointer-events-none" />
                                         <input
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="w-full bg-night border border-glass-border rounded-lg pl-9 pr-3 py-2 font-body text-sm text-chalk placeholder:text-chalk/30 focus:outline-none focus:border-floodlight/50 transition-colors"
+                                            className="w-full bg-night border border-glass-border rounded-lg pl-9 pr-3 py-2 font-body text-sm text-chalk placeholder:text-chalk/60 focus:border-floodlight/50 transition-colors"
                                         />
                                     </div>
                                 </label>
 
                                 <label className="flex flex-col gap-1.5">
-                                    <span className="font-body text-[10px] uppercase tracking-widest2 text-chalk/40">Email</span>
+                                    <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">Email</span>
                                     <div className="relative">
-                                        <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-chalk/30 pointer-events-none" />
+                                        <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-chalk/60 pointer-events-none" />
                                         <input
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full bg-night border border-glass-border rounded-lg pl-9 pr-3 py-2 font-body text-sm text-chalk placeholder:text-chalk/30 focus:outline-none focus:border-floodlight/50 transition-colors"
+                                            className="w-full bg-night border border-glass-border rounded-lg pl-9 pr-3 py-2 font-body text-sm text-chalk placeholder:text-chalk/60 focus:border-floodlight/50 transition-colors"
                                         />
                                     </div>
                                 </label>
@@ -537,6 +540,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             </section>
+        </main>
         </div>
     )
 }

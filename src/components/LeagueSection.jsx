@@ -9,7 +9,6 @@ function LeagueSection({
   icon: Icon,
   children,
   defaultOpen = true,
-  gameweek,
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const [imgError, setImgError] = useState(false)
@@ -64,27 +63,22 @@ function LeagueSection({
               <h2 className="font-display text-base md:text-lg font-semibold uppercase tracking-wide text-chalk">
                 {title}
               </h2>
-              {gameweek && (
-                <span className="font-body text-[9px] font-semibold uppercase tracking-widest2 text-chalk/30 bg-chalk/5 px-2 py-0.5 rounded-full">
-                  GW {gameweek}
-                </span>
-              )}
             </div>
             {subtitle && (
-              <p className="font-body text-[11px] text-chalk/40 mt-0.5">{subtitle}</p>
+              <p className="font-body text-xs text-chalk/60 mt-0.5">{subtitle}</p>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Match count badge */}
-          <span className="font-body text-[11px] font-semibold uppercase tracking-widest2 text-chalk/40 bg-chalk/5 px-2.5 py-1 rounded-full">
+          <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60 bg-chalk/5 px-2.5 py-1 rounded-full">
             {matchCount} {matchCount === 1 ? "match" : "matches"}
           </span>
           {/* Chevron */}
           <ChevronDown
             size={16}
-            className={`text-chalk/30 transition-all duration-300 ease-out ${
+            className={`text-chalk/60 transition-all duration-300 ease-out ${
               isOpen ? "rotate-180" : ""
             }`}
             aria-hidden="true"

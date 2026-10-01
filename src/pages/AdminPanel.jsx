@@ -1,8 +1,11 @@
-import { useEffect, useState, useCallback } from "react"
-import { useSearchParams } from "react-router-dom"
-import { Plus, Pencil, Trash2, Save, X, Shield, AlertCircle } from "lucide-react"
+import { useEffect, useRef, useState, useCallback } from "react"
+import { Link, useSearchParams } from "react-router-dom"
+import { Plus, Pencil, Trash2, Save, X, Shield, AlertCircle, ClipboardList } from "lucide-react"
 import AdminSidebar from "../components/AdminSidebar"
 import Modal from "../components/Modal"
+import ErrorState from "../components/ErrorState"
+import { useAsync } from "../hooks/useAsync"
+import { normalizePayload } from "../utils/adminPayload"
 import api from "../services/api"
 
 const SECTIONS = [
@@ -17,7 +20,7 @@ const VALID_STATUSES = ["scheduled", "live", "completed"]
 function Field({ label, children }) {
     return (
         <label className="flex flex-col gap-1.5">
-            <span className="font-body text-xs uppercase tracking-widest2 text-chalk/50">{label}</span>
+            <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">{label}</span>
             {children}
         </label>
     )
@@ -31,7 +34,7 @@ function Input({ value, onChange, placeholder, type = "text", required }) {
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             required={required}
-            className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/30 focus:outline-none focus:border-floodlight transition-colors"
+            className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/60 focus:border-floodlight transition-colors"
         />
     )
 }
@@ -41,7 +44,7 @@ function Select({ value, onChange, options }) {
         <select
             value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk focus:outline-none focus:border-floodlight transition-colors"
+            className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk focus:border-floodlight transition-colors"
         >
             <option value="" disabled>Select…</option>
             {options.map((opt) => (
@@ -80,14 +83,21 @@ const VALID_TABS = ["teams", "players", "matches"]
 export default function AdminPanel() {
     const [searchParams, setSearchParams] = useSearchParams()
     const tabFromUrl = searchParams.get("tab") || "teams"
-    const initialTab = VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "teams"
-    const [section, setSection] = useState(initialTab)
+    // Derived from the URL so sidebar links (?tab=...) and the tab buttons stay in sync
+    const section = VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "teams"
 
-    // Data state
-    const [teams, setTeams] = useState([])
-    const [players, setPlayers] = useState([])
-    const [matches, setMatches] = useState([])
-    const [loading, setLoading] = useState(true)
+    // Data: all three lists load together; after any write we refetch so the tables show server truth
+    const { data, loading, hasLoaded, error, refetch } = useAsync(
+        (signal) =>
+            Promise.all([
+                api.teams.list({ signal }),
+                api.players.list({}, { signal }),
+                api.matches.list({}, { signal }),
+            ]).then(([teams, players, matches]) => ({ teams, players, matches })),
+        [],
+        { teams: [], players: [], matches: [] }
+    )
+    const { teams, players, matches } = data
 
     // Form modal state
     const [modalOpen, setModalOpen] = useState(false)
@@ -102,35 +112,13 @@ export default function AdminPanel() {
     // Flash message
     const [flash, setFlash] = useState(null)
 
+    const flashTimer = useRef(null)
     const showFlash = useCallback((message, type = "success") => {
+        clearTimeout(flashTimer.current) // an older timer must not clear a newer message
         setFlash({ message, type })
-        setTimeout(() => setFlash(null), 3000)
+        flashTimer.current = setTimeout(() => setFlash(null), 3000)
     }, [])
-
-    // Fetch data based on active section
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
-
-        const fetches = {
-            teams: api.teams.list(),
-            players: api.players.list(),
-            matches: api.matches.list(),
-        }
-
-        Promise.all([fetches.teams, fetches.players, fetches.matches])
-            .then(([t, p, m]) => {
-                if (cancelled) return
-                setTeams(t)
-                setPlayers(p)
-                setMatches(m)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-
-        return () => { cancelled = true }
-    }, [])
+    useEffect(() => () => clearTimeout(flashTimer.current), [])
 
     // Open create modal
     const openCreate = () => {
@@ -187,19 +175,16 @@ export default function AdminPanel() {
         setFormError("")
         try {
             if (section === "teams") {
+                const payload = normalizePayload("teams", formData)
                 if (editingItem) {
-                    await api.teams.update(editingItem.id, formData)
-                    setTeams((prev) => prev.map((t) => (t.id === editingItem.id ? { ...t, ...formData } : t)))
+                    await api.teams.update(editingItem.id, payload)
                     showFlash("Team updated")
                 } else {
-                    const created = await api.teams.create(formData)
-                    setTeams((prev) => [...prev, created])
+                    await api.teams.create(payload)
                     showFlash("Team created")
                 }
             } else if (section === "players") {
-                const payload = { ...formData }
-                if (payload.age === "") delete payload.age
-                if (payload.jersey_number === "") delete payload.jersey_number
+                const payload = normalizePayload("players", formData)
 
                 // Clean attributes: remove empty strings, omit if completely empty
                 if (payload.attributes) {
@@ -216,32 +201,23 @@ export default function AdminPanel() {
 
                 if (editingItem) {
                     await api.players.update(editingItem.id, payload)
-                    // Refresh players list to get updated data with team
-                    const updated = await api.players.list()
-                    setPlayers(updated)
                     showFlash("Player updated")
                 } else {
-                    const created = await api.players.create(payload)
-                    setPlayers((prev) => [...prev, created])
+                    await api.players.create(payload)
                     showFlash("Player created")
                 }
             } else if (section === "matches") {
-                const payload = { ...formData }
-                if (payload.home_score === "") payload.home_score = null
-                if (payload.away_score === "") payload.away_score = null
-                if (payload.minute === "") payload.minute = null
+                const payload = normalizePayload("matches", formData)
 
                 if (editingItem) {
                     await api.matches.update(editingItem.id, payload)
-                    const updated = await api.matches.list()
-                    setMatches(updated)
                     showFlash("Match updated")
                 } else {
-                    const created = await api.matches.create(payload)
-                    setMatches((prev) => [...prev, created])
+                    await api.matches.create(payload)
                     showFlash("Match created")
                 }
             }
+            refetch()
             setModalOpen(false)
         } catch (err) {
             setFormError(err.message || "Something went wrong")
@@ -256,17 +232,15 @@ export default function AdminPanel() {
         try {
             if (section === "teams") {
                 await api.teams.remove(deleteTarget.id)
-                setTeams((prev) => prev.filter((t) => t.id !== deleteTarget.id))
                 showFlash("Team deleted")
             } else if (section === "players") {
                 await api.players.remove(deleteTarget.id)
-                setPlayers((prev) => prev.filter((p) => p.id !== deleteTarget.id))
                 showFlash("Player removed")
             } else if (section === "matches") {
                 await api.matches.remove(deleteTarget.id)
-                setMatches((prev) => prev.filter((m) => m.id !== deleteTarget.id))
                 showFlash("Match deleted")
             }
+            refetch()
             setDeleteTarget(null)
         } catch (err) {
             showFlash(err.message || "Delete failed", "error")
@@ -365,7 +339,7 @@ const GOALKEEPER_ATTRS = [
                             value={formData.bio ?? ""}
                             onChange={(e) => setField("bio")(e.target.value)}
                             rows={3}
-                            className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/30 focus:outline-none focus:border-floodlight transition-colors resize-none"
+                            className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/60 focus:border-floodlight transition-colors resize-none"
                             placeholder="Player biography…"
                         />
                     </Field>
@@ -376,7 +350,7 @@ const GOALKEEPER_ATTRS = [
                             <div className="border-t border-line/50 pt-4">
                                 <h4 className="font-display uppercase tracking-wide text-sm text-chalk mb-3">
                                     Attributes
-                                    <span className="font-body text-[10px] text-chalk/40 ml-2 font-normal normal-case tracking-normal">
+                                    <span className="font-body text-xs text-chalk/60 ml-2 font-normal normal-case tracking-normal">
                                         ({formData.position === "Goalkeeper" ? "Goalkeeper" : "Outfield"} set)
                                     </span>
                                 </h4>
@@ -398,7 +372,7 @@ const GOALKEEPER_ATTRS = [
                                                     }))
                                                 }
                                                 placeholder="0–100"
-                                                className="w-full bg-night border border-line rounded-lg px-3 py-2 font-body text-sm text-chalk placeholder:text-chalk/30 focus:outline-none focus:border-floodlight transition-colors text-center tabular-nums"
+                                                className="w-full bg-night border border-line rounded-lg px-3 py-2 font-body text-sm text-chalk placeholder:text-chalk/60 focus:border-floodlight transition-colors text-center tabular-nums"
                                             />
                                         </Field>
                                     ))}
@@ -462,10 +436,15 @@ const GOALKEEPER_ATTRS = [
 
     // Table list based on active section
     const renderList = () => {
-        if (loading) {
+        if (error && !hasLoaded) {
+            return <ErrorState error={error} onRetry={refetch} title="Couldn't load admin data" />
+        }
+
+        // Only show the full loading state on the first load; refetches keep the table in place
+        if (loading && !hasLoaded) {
             return (
                 <div className="bg-pitch/30 border border-line rounded-lg p-8 text-center">
-                    <p className="font-body text-sm text-chalk/50 uppercase tracking-widest2 animate-pulse">Loading…</p>
+                    <p className="font-body text-sm text-chalk/60 uppercase tracking-widest2 animate-pulse">Loading…</p>
                 </div>
             )
         }
@@ -478,7 +457,7 @@ const GOALKEEPER_ATTRS = [
                 <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-line font-body text-xs uppercase tracking-widest2 text-chalk/40">
+                            <tr className="border-b border-line font-body text-xs uppercase tracking-widest2 text-chalk/60">
                                 <th className="text-left px-5 py-3 font-normal">Name</th>
                                 <th className="text-left px-5 py-3 font-normal">City</th>
                                 <th className="text-left px-5 py-3 font-normal">Founded</th>
@@ -512,7 +491,7 @@ const GOALKEEPER_ATTRS = [
                 <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-line font-body text-xs uppercase tracking-widest2 text-chalk/40">
+                            <tr className="border-b border-line font-body text-xs uppercase tracking-widest2 text-chalk/60">
                                 <th className="text-left px-5 py-3 font-normal">Name</th>
                                 <th className="text-left px-5 py-3 font-normal">Position</th>
                                 <th className="text-left px-5 py-3 font-normal">Team</th>
@@ -546,7 +525,7 @@ const GOALKEEPER_ATTRS = [
                 <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-line font-body text-xs uppercase tracking-widest2 text-chalk/40">
+                            <tr className="border-b border-line font-body text-xs uppercase tracking-widest2 text-chalk/60">
                                 <th className="text-left px-5 py-3 font-normal">Home</th>
                                 <th className="text-left px-5 py-3 font-normal">Away</th>
                                 <th className="text-left px-5 py-3 font-normal">Date</th>
@@ -566,7 +545,7 @@ const GOALKEEPER_ATTRS = [
                                     <td className="px-5 py-3">
                                         <span className={`text-xs font-semibold uppercase tracking-widest2 ${
                                             m.status === "live" ? "text-floodlight" :
-                                            m.status === "completed" ? "text-chalk/40" : "text-chalk/50"
+                                            m.status === "completed" ? "text-chalk/60" : "text-chalk/60"
                                         }`}>
                                             {m.status}
                                         </span>
@@ -575,7 +554,23 @@ const GOALKEEPER_ATTRS = [
                                         {m.home_score != null ? `${m.home_score} - ${m.away_score}` : "—"}
                                     </td>
                                     <td className="px-5 py-3 text-right">
-                                        <ActionButtons item={m} onEdit={openEdit} onDelete={setDeleteTarget} />
+                                        <ActionButtons
+                                            item={m}
+                                            onEdit={openEdit}
+                                            onDelete={setDeleteTarget}
+                                            extra={
+                                                m.status !== "scheduled" && (
+                                                    <Link
+                                                        to={`/admin/matches/${m.id}/stats`}
+                                                        aria-label="Player stats"
+                                                        title="Player stats"
+                                                        className="p-1.5 rounded text-chalk/60 hover:text-floodlight hover:bg-pitch/30 transition-colors"
+                                                    >
+                                                        <ClipboardList size={15} />
+                                                    </Link>
+                                                )
+                                            }
+                                        />
                                     </td>
                                 </tr>
                             ))}
@@ -609,7 +604,7 @@ const GOALKEEPER_ATTRS = [
                             <Shield size={24} className="text-floodlight" />
                             Admin Panel
                         </h1>
-                        <p className="font-body text-sm text-chalk/50">Manage teams, players, and matches.</p>
+                        <p className="font-body text-sm text-chalk/60">Manage teams, players, and matches.</p>
                     </div>
                 </div>
 
@@ -619,7 +614,6 @@ const GOALKEEPER_ATTRS = [
                         <button
                             key={s.value}
                             onClick={() => {
-                                setSection(s.value)
                                 if (s.value === "teams") {
                                     setSearchParams({}, { replace: true })
                                 } else {
@@ -699,20 +693,21 @@ const GOALKEEPER_ATTRS = [
     )
 }
 
-function ActionButtons({ item, onEdit, onDelete }) {
+function ActionButtons({ item, onEdit, onDelete, extra = null }) {
     return (
         <div className="inline-flex gap-1">
+            {extra}
             <button
                 onClick={() => onEdit(item)}
                 aria-label="Edit"
-                className="p-1.5 rounded text-chalk/40 hover:text-floodlight hover:bg-pitch/30 transition-colors cursor-pointer"
+                className="p-1.5 rounded text-chalk/60 hover:text-floodlight hover:bg-pitch/30 transition-colors cursor-pointer"
             >
                 <Pencil size={15} />
             </button>
             <button
                 onClick={() => onDelete(item)}
                 aria-label="Delete"
-                className="p-1.5 rounded text-chalk/40 hover:text-flare hover:bg-pitch/30 transition-colors cursor-pointer"
+                className="p-1.5 rounded text-chalk/60 hover:text-flare hover:bg-pitch/30 transition-colors cursor-pointer"
             >
                 <Trash2 size={15} />
             </button>
@@ -723,7 +718,7 @@ function ActionButtons({ item, onEdit, onDelete }) {
 function EmptyList({ message }) {
     return (
         <div className="bg-pitch/30 border border-line rounded-lg p-12 text-center">
-            <p className="font-body text-sm text-chalk/50">{message}</p>
+            <p className="font-body text-sm text-chalk/60">{message}</p>
         </div>
     )
 }

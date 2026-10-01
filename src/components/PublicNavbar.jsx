@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Menu, X, ChevronDown } from "lucide-react"
+import { Menu, X } from "lucide-react"
 
 const NAV_LINKS = [
     { label: "Matches", to: "/matches" },
@@ -16,7 +16,7 @@ export default function PublicNavbar({ transparent = false, user = null }) {
 
     return (
         <nav
-            className={`w-full z-30 transition-all duration-300 ${
+            className={`w-full z-30 transition-[background-color,backdrop-filter,border-color] duration-200 ease-out ${
                 transparent
                     ? "absolute top-0 left-0 bg-transparent"
                     : "sticky top-0 bg-night/90 backdrop-blur-lg border-b border-glass-border"
@@ -42,7 +42,7 @@ export default function PublicNavbar({ transparent = false, user = null }) {
                         <Link
                             key={link.to}
                             to={link.to}
-                            className={`relative px-4 py-2 rounded-lg font-body text-sm font-medium tracking-wide transition-all duration-200 ${
+                            className={`relative px-4 py-2 rounded-lg font-body text-sm font-medium tracking-wide transition-colors duration-200 ease-out ${
                                 isActive(link.to)
                                     ? "text-floodlight bg-floodlight/10"
                                     : "text-chalk/70 hover:text-chalk hover:bg-chalk/5"
@@ -62,7 +62,7 @@ export default function PublicNavbar({ transparent = false, user = null }) {
                         <div className="flex items-center gap-3">
                             <Link
                                 to="/dashboard"
-                                className="px-4 py-2 rounded-lg bg-floodlight text-night font-body text-sm font-semibold hover:bg-chalk transition-all duration-200"
+                                className="px-4 py-2 rounded-lg bg-floodlight text-night font-body text-sm font-semibold hover:bg-chalk transition-colors duration-200 ease-out"
                             >
                                 Dashboard
                             </Link>
@@ -76,13 +76,13 @@ export default function PublicNavbar({ transparent = false, user = null }) {
                         <>
                             <Link
                                 to="/login"
-                                className="px-4 py-2 rounded-lg font-body text-sm font-medium text-chalk/70 hover:text-chalk hover:bg-chalk/5 transition-all duration-200"
+                                className="px-4 py-2 rounded-lg font-body text-sm font-medium text-chalk/70 hover:text-chalk hover:bg-chalk/5 transition-colors duration-200 ease-out"
                             >
                                 Sign In
                             </Link>
                             <Link
                                 to="/register"
-                                className="px-5 py-2 rounded-lg bg-floodlight text-night font-body text-sm font-semibold hover:bg-chalk transition-all duration-200"
+                                className="px-5 py-2 rounded-lg bg-floodlight text-night font-body text-sm font-semibold hover:bg-chalk transition-colors duration-200 ease-out"
                             >
                                 Register
                             </Link>
@@ -103,7 +103,7 @@ export default function PublicNavbar({ transparent = false, user = null }) {
 
             {/* Mobile menu */}
             <div
-                className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-200 ease-out ${
                     mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                 }`}
             >

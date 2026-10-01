@@ -14,9 +14,11 @@ import LeagueSection from "../components/LeagueSection"
 import MatchCard from "../components/MatchCard"
 import EmptyMatches from "../components/EmptyMatches"
 import MatchSkeleton from "../components/MatchSkeleton"
+import ErrorState from "../components/ErrorState"
+import { useAsync } from "../hooks/useAsync"
 import api from "../services/api"
 
-/* ─────────────────────────────────────────
+/* 
    Helpers
    ───────────────────────────────────────── */
 
@@ -49,9 +51,9 @@ function formatSectionDateShort(dateStr) {
   })
 }
 
-/* ─────────────────────────────────────────
+/* 
    Quick Stats Bar
-   ───────────────────────────────────────── */
+  */
 
 const StatsBar = memo(function StatsBar({ total, live, upcoming, completed }) {
   return (
@@ -75,7 +77,7 @@ const StatsBar = memo(function StatsBar({ total, live, upcoming, completed }) {
               <div className="font-display text-2xl font-bold text-chalk tabular-nums tracking-tight">
                 {stat.value}
               </div>
-              <div className="font-body text-[10px] text-chalk-muted uppercase tracking-widest2 mt-1">
+              <div className="font-body text-xs text-chalk-muted uppercase tracking-widest2 mt-1">
                 {stat.label}
               </div>
             </div>
@@ -83,7 +85,7 @@ const StatsBar = memo(function StatsBar({ total, live, upcoming, completed }) {
               className={`p-2 rounded-lg ${
                 stat.accent
                   ? "bg-flare/15 text-flare"
-                  : "bg-chalk/5 text-chalk/30"
+                  : "bg-chalk/5 text-chalk/60"
               }`}
             >
               <stat.icon size={16} strokeWidth={1.5} />
@@ -109,34 +111,17 @@ export default function Matches() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // ── Data ──
-  const [matches, setMatches] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data: matches, loading, error, refetch } = useAsync(
+    (signal) => api.matches.list({}, { signal }),
+    [],
+    []
+  )
 
   // ── Filters ──
   const [tab, setTab] = useState(searchParams.get("status") || "all")
   const [query, setQuery] = useState(searchParams.get("q") || "")
   const [debouncedQuery, setDebouncedQuery] = useState(query)
-  const [sortBy, setSortBy] = useState("date")
   const [dateFilter, setDateFilter] = useState("all")
-
-  // ── Data fetch ──
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-
-    api.matches
-      .list()
-      .then((data) => {
-        if (!cancelled) setMatches(data)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   // ── Debounce search input ──
   useEffect(() => {
@@ -277,25 +262,14 @@ export default function Matches() {
           {/* Quick actions */}
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => window.location.reload()}
-              className="p-2.5 rounded-lg border border-glass-border text-chalk/40 hover:text-chalk hover:border-chalk/20 transition-all duration-200"
+              onClick={refetch}
+              className="p-2.5 rounded-lg border border-glass-border text-chalk/60 hover:text-chalk hover:border-chalk/20 transition-all duration-200"
               aria-label="Refresh matches"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="23 4 23 10 17 10" />
                 <polyline points="1 20 1 14 7 14" />
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            </button>
-            <button
-              className="p-2.5 rounded-lg border border-glass-border text-chalk/40 hover:text-chalk hover:border-chalk/20 transition-all duration-200"
-              aria-label="Calendar view"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </button>
           </div>
@@ -319,15 +293,15 @@ export default function Matches() {
         query={query}
         onQueryChange={handleQueryChange}
         liveCount={liveMatches.length}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
         dateFilter={dateFilter}
         onDateFilterChange={setDateFilter}
       />
 
       {/* ── Main Content ── */}
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-8 md:py-10">
-        {loading ? (
+      <main id="main" className="max-w-7xl mx-auto px-6 md:px-10 py-8 md:py-10">
+        {error ? (
+          <ErrorState error={error} onRetry={refetch} title="Couldn't load matches" />
+        ) : loading ? (
           <div className="space-y-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -379,7 +353,6 @@ export default function Matches() {
                   matchCount={group.matches.length}
                   icon={Calendar}
                   defaultOpen={group.matches.some((m) => m.status === "live")}
-                  gameweek={((group.matches[0]?.id * 7) % 6) + 1}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
                     {group.matches.map((m) => (

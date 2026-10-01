@@ -1,35 +1,15 @@
-import { useEffect, useState, useMemo } from "react"
+import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { MapPin } from "lucide-react"
 import TeamEmblem from "./TeamEmblem"
 import MatchStatusBadge from "./MatchStatusBadge"
-import MatchCardSkeleton from "./MatchCardSkeleton"
 import PlayerCardSkeleton from "./PlayerCardSkeleton"
 import { computeOverallRating, ratingTier } from "../utils/playerRating"
-import api from "../services/api"
+import { pickFeaturedMatch } from "../utils/leagueSummary"
 
 /* ─────────────────────────────────────────
    Helpers
    ───────────────────────────────────────── */
-
-function pickFeaturedMatch(matches) {
-    if (!matches || matches.length === 0) return null
-    const live = matches.find((m) => m.status === "live")
-    if (live) return live
-
-    const now = new Date()
-    const upcoming = matches
-        .filter((m) => m.status === "scheduled")
-        .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
-    if (upcoming.length > 0) return upcoming[0]
-
-    const completed = matches
-        .filter((m) => m.status === "completed")
-        .sort((a, b) => new Date(b.match_date) - new Date(a.match_date))
-    if (completed.length > 0) return completed[0]
-
-    return matches[0]
-}
 
 function pickTopPlayer(players) {
     if (!players || players.length === 0) return null
@@ -64,72 +44,71 @@ function MatchSpotlightCard({ match }) {
 
     const isLive = match.status === "live"
     const hasScore = (isLive || match.status === "completed") && match.home_score != null
+    const home = match.home_team?.name ?? "TBD"
+    const away = match.away_team?.name ?? "TBD"
 
     return (
         <Link
             to={`/matches/${match.id}`}
-            className="group block h-full bg-gradient-to-br from-pitch/20 to-night border border-line rounded-xl p-5 hover:border-floodlight/40 transition-all duration-300"
+            className="spotlight-card group flex h-full min-h-[13rem] flex-col gap-6 bg-gradient-to-br from-pitch/20 to-night border border-line rounded-xl p-6 md:p-8 hover:border-floodlight/40"
         >
-            {/* Status badge */}
-            <div className="mb-4">
-                <MatchStatusBadge
-                    status={match.status}
-                    minute={match.minute}
-                />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <MatchStatusBadge status={match.status} minute={match.minute} />
+                {match.venue && (
+                    <div className="flex items-center gap-1.5 text-chalk/70">
+                        <MapPin size={12} aria-hidden="true" />
+                        <span className="font-body text-xs truncate">{match.venue}</span>
+                    </div>
+                )}
             </div>
 
-            {/* Teams + Score */}
-            <div className="flex items-center justify-between gap-3 mb-4">
-                <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
-                    <TeamEmblem name={match.home_team?.name} size="sm" />
-                    <span className="font-body text-xs font-semibold text-chalk text-center truncate w-full">
-                        {match.home_team?.name ?? "TBD"}
+            <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
+                <div className="flex min-w-0 flex-col items-center gap-3">
+                    <TeamEmblem name={home} size="md" />
+                    <span className="font-body text-sm font-semibold text-chalk text-center line-clamp-2" title={home}>
+                        {home}
                     </span>
                 </div>
 
-                <div className="flex flex-col items-center shrink-0 px-2">
+                <div className="flex flex-col items-center px-2">
                     {hasScore ? (
-                        <div className="flex items-center gap-2">
-                            <span className="font-display text-2xl font-bold text-chalk tabular-nums">
-                                {match.home_score}
-                            </span>
-                            <span className="font-display text-base text-chalk/20 font-bold">-</span>
-                            <span className="font-display text-2xl font-bold text-chalk tabular-nums">
-                                {match.away_score}
-                            </span>
+                        <div className="font-display text-5xl md:text-6xl font-bold text-chalk tabular-nums whitespace-nowrap">
+                            {match.home_score}
+                            <span className="text-chalk/40 mx-2" aria-hidden="true">-</span>
+                            {match.away_score}
                         </div>
                     ) : (
-                        <span className="font-body text-[10px] uppercase tracking-widest2 text-chalk/30">VS</span>
-                    )}
-                    {!hasScore && match.match_date && (
-                        <span className="font-body text-[10px] text-chalk/40 mt-1 whitespace-nowrap">
-                            {formatKickoff(match.match_date)}
-                        </span>
+                        <>
+                            <span className="font-display text-2xl uppercase tracking-widest2 text-chalk/70">vs</span>
+                            {match.match_date && (
+                                <span className="font-body text-xs text-chalk/70 mt-2 whitespace-nowrap">
+                                    {formatKickoff(match.match_date)}
+                                </span>
+                            )}
+                        </>
                     )}
                 </div>
 
-                <div className="flex flex-col items-center gap-1.5 min-w-0 flex-1">
-                    <TeamEmblem name={match.away_team?.name} size="sm" />
-                    <span className="font-body text-xs font-semibold text-chalk text-center truncate w-full">
-                        {match.away_team?.name ?? "TBD"}
+                <div className="flex min-w-0 flex-col items-center gap-3">
+                    <TeamEmblem name={away} size="md" />
+                    <span className="font-body text-sm font-semibold text-chalk text-center line-clamp-2" title={away}>
+                        {away}
                     </span>
                 </div>
             </div>
 
-            {/* Venue */}
-            {match.venue && (
-                <div className="flex items-center gap-1.5 justify-center text-chalk/40">
-                    <MapPin size={11} aria-hidden="true" />
-                    <span className="font-body text-[11px] truncate">{match.venue}</span>
-                </div>
-            )}
-
-            {/* Hover indicator */}
-            <div className="mt-3 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="font-body text-[10px] uppercase tracking-widest2 text-floodlight">View Match</span>
-                <span className="text-floodlight text-xs" aria-hidden="true">→</span>
-            </div>
+            <SpotlightCue label="View Match" />
         </Link>
+    )
+}
+
+/** Always visible on touch; on pointer devices it appears on hover or keyboard focus. */
+function SpotlightCue({ label }) {
+    return (
+        <div className="spotlight-cue flex items-center gap-1">
+            <span className="font-body text-xs uppercase tracking-widest2 text-floodlight">{label}</span>
+            <span className="text-floodlight text-xs" aria-hidden="true">→</span>
+        </div>
     )
 }
 
@@ -145,15 +124,15 @@ function PlayerSpotlightCard({ player, rating }) {
     return (
         <Link
             to={`/players/${player.id}`}
-            className="group block h-full bg-gradient-to-br from-pitch/20 to-night border border-line rounded-xl p-5 hover:border-floodlight/40 transition-all duration-300"
+            className="spotlight-card group flex h-full min-h-[13rem] flex-col bg-gradient-to-br from-pitch/20 to-night border border-line rounded-xl p-6 hover:border-floodlight/40"
         >
             {/* Top row: avatar + rating badge */}
             <div className="flex items-start justify-between mb-4">
-                <div className="w-14 h-14 rounded-full bg-pitch flex items-center justify-center overflow-hidden ring-2 ring-chalk/10 group-hover:ring-floodlight/30 transition-all">
+                <div className="w-14 h-14 rounded-full bg-pitch flex items-center justify-center overflow-hidden ring-2 ring-chalk/10 group-hover:ring-floodlight/30 transition-[box-shadow] duration-200">
                     {player.photo_url ? (
                         <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover" />
                     ) : (
-                        <span className="font-display text-sm text-chalk/60">{initials}</span>
+                        <span className="font-display text-sm text-chalk/85">{initials}</span>
                     )}
                 </div>
                 {rating !== null && (
@@ -164,16 +143,16 @@ function PlayerSpotlightCard({ player, rating }) {
             </div>
 
             {/* Name */}
-            <h4 className="font-display uppercase tracking-wide text-chalk group-hover:text-floodlight transition-colors truncate">
+            <h3 className="font-display uppercase tracking-wide text-chalk group-hover:text-floodlight transition-colors truncate">
                 {player.name}
-            </h4>
+            </h3>
 
             {/* Meta */}
-            <div className="flex items-center gap-2 mt-1 text-chalk/50">
+            <div className="flex items-center gap-2 mt-1 text-chalk/60">
                 <span className="font-body text-xs">{player.position}</span>
                 {player.jersey_number && (
                     <>
-                        <span className="text-chalk/20 text-[10px]" aria-hidden="true">·</span>
+                        <span className="text-chalk/20 text-xs" aria-hidden="true">·</span>
                         <span className="font-body text-xs">#{player.jersey_number}</span>
                     </>
                 )}
@@ -181,13 +160,11 @@ function PlayerSpotlightCard({ player, rating }) {
 
             {/* Team */}
             {player.team?.name && (
-                <p className="font-body text-[11px] text-chalk/35 mt-1 truncate">{player.team.name}</p>
+                <p className="font-body text-xs text-chalk/60 mt-1 truncate">{player.team.name}</p>
             )}
 
-            {/* Hover indicator */}
-            <div className="mt-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="font-body text-[10px] uppercase tracking-widest2 text-floodlight">View Profile</span>
-                <span className="text-floodlight text-xs" aria-hidden="true">→</span>
+            <div className="mt-auto pt-4">
+                <SpotlightCue label="View Profile" />
             </div>
         </Link>
     )
@@ -197,46 +174,19 @@ function PlayerSpotlightCard({ player, rating }) {
    Main component
    ───────────────────────────────────────── */
 
-export default function HomeSpotlight() {
-    const [matches, setMatches] = useState([])
-    const [players, setPlayers] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
-
-        Promise.all([
-            api.matches.list(),
-            api.players.list(),
-        ])
-            .then(([matchData, playerData]) => {
-                if (cancelled) return
-                setMatches(matchData)
-                setPlayers(playerData)
-            })
-            .catch(() => {
-                // Silently handle — component will render fallback state
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-
-        return () => { cancelled = true }
-    }, [])
-
+export default function HomeSpotlight({ matches, players, loading }) {
     const featuredMatch = useMemo(() => pickFeaturedMatch(matches), [matches])
     const topPlayer = useMemo(() => pickTopPlayer(players), [players])
 
     return (
-        <section className="max-w-7xl mx-auto px-6 md:px-10 py-12 md:py-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <section className="section-padded section-padded-tight" aria-label="Featured match and in-form player">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-8 lg:gap-6">
 
                 {/* ── Left: Featured Match ── */}
                 <div>
-                    <h3 className="font-display uppercase tracking-wide text-sm text-chalk-muted mb-4">
+                    <h2 className="font-display uppercase tracking-wide text-sm text-chalk/70 mb-3">
                         <span className="text-floodlight">Featured</span> Match
-                    </h3>
+                    </h2>
                     {loading ? (
                         <div className="bg-pitch/10 border border-line rounded-xl p-5 animate-pulse">
                             <div className="h-4 w-16 bg-line/30 rounded mb-4" />
@@ -258,8 +208,8 @@ export default function HomeSpotlight() {
                     ) : (
                         <div className="bg-pitch/10 border border-line rounded-xl p-6 flex items-center justify-center min-h-[220px]">
                             <div className="text-center">
-                                <p className="font-body text-sm text-chalk/40">No matches available yet.</p>
-                                <p className="font-body text-[11px] text-chalk/30 mt-1">
+                                <p className="font-body text-sm text-chalk/60">No matches available yet.</p>
+                                <p className="font-body text-xs text-chalk/60 mt-1">
                                     Matches will appear here once they are scheduled.
                                 </p>
                             </div>
@@ -269,9 +219,9 @@ export default function HomeSpotlight() {
 
                 {/* ── Right: Top-Rated Player ── */}
                 <div>
-                    <h3 className="font-display uppercase tracking-wide text-sm text-chalk-muted mb-4">
+                    <h2 className="font-display uppercase tracking-wide text-sm text-chalk/70 mb-3">
                         <span className="text-floodlight">In Form</span> Player
-                    </h3>
+                    </h2>
                     {loading ? (
                         <PlayerCardSkeleton />
                     ) : topPlayer ? (
@@ -279,8 +229,8 @@ export default function HomeSpotlight() {
                     ) : (
                         <div className="bg-pitch/10 border border-line rounded-xl p-6 flex items-center justify-center min-h-[220px]">
                             <div className="text-center">
-                                <p className="font-body text-sm text-chalk/40">No player data available yet.</p>
-                                <p className="font-body text-[11px] text-chalk/30 mt-1">
+                                <p className="font-body text-sm text-chalk/60">No player data available yet.</p>
+                                <p className="font-body text-xs text-chalk/60 mt-1">
                                     Players will appear here once they are added to the league.
                                 </p>
                             </div>

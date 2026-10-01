@@ -33,7 +33,7 @@ export default function Modal({ open, onClose, title, children }) {
                     <button
                         onClick={onClose}
                         aria-label="Close"
-                        className="font-body text-chalk/40 hover:text-chalk transition-colors cursor-pointer"
+                        className="font-body text-chalk/60 hover:text-chalk transition-colors cursor-pointer"
                     >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M5 5l10 10M15 5L5 15" />

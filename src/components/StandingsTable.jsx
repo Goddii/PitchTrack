@@ -1,4 +1,6 @@
+import { Link } from "react-router-dom"
 import TeamEmblem from "./TeamEmblem"
+import FormPills from "./FormPills"
 
 /* ─────────────────────────────────────────────
    Loading skeleton
@@ -10,7 +12,7 @@ function StandingsSkeleton() {
       aria-label="Loading standings"
     >
       {/* Header */}
-      <div className="hidden md:flex items-center gap-4 px-6 py-4 border-b border-glass-border">
+      <div className="hidden md:flex items-center gap-4 px-3 md:px-6 py-4 border-b border-glass-border">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="h-3 bg-line/20 rounded" style={{ width: i === 0 ? 28 : i === 1 ? 48 : 32 }} />
         ))}
@@ -19,7 +21,7 @@ function StandingsSkeleton() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 px-6 py-4 border-b border-glass-border last:border-b-0"
+          className="flex items-center gap-4 px-3 md:px-6 py-4 border-b border-glass-border last:border-b-0"
         >
           <div className="h-5 w-6 bg-line/15 rounded" />
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -39,30 +41,6 @@ function StandingsSkeleton() {
 }
 
 /* ─────────────────────────────────────────────
-   Zone divider
-   ───────────────────────────────────────────── */
-function ZoneDivider({ label, accent = "floodlight" }) {
-  const lineColor = accent === "flare" ? "bg-flare/30" : "bg-floodlight/30"
-  const textColor = accent === "flare" ? "text-flare" : "text-floodlight"
-
-  return (
-    <tr aria-hidden="true">
-      <td colSpan={10} className="px-6 py-0">
-        <div className="flex items-center gap-3 py-2">
-          <div className={`flex-1 h-px ${lineColor}`} />
-          <span
-            className={`font-body text-[10px] font-semibold uppercase tracking-widest2 ${textColor}`}
-          >
-            {label}
-          </span>
-          <div className={`flex-1 h-px ${lineColor}`} />
-        </div>
-      </td>
-    </tr>
-  )
-}
-
-/* ─────────────────────────────────────────────
    Standings table
    ───────────────────────────────────────────── */
 export default function StandingsTable({ standings, loading, error }) {
@@ -76,7 +54,7 @@ export default function StandingsTable({ standings, loading, error }) {
         <p className="font-display uppercase tracking-wide text-chalk/70 mb-2">
           Could not load standings
         </p>
-        <p className="font-body text-sm text-chalk/45 max-w-sm mx-auto">
+        <p className="font-body text-sm text-chalk/60 max-w-sm mx-auto">
           We weren&rsquo;t able to fetch the match data needed to build the table. Please try again later.
         </p>
       </div>
@@ -90,136 +68,118 @@ export default function StandingsTable({ standings, loading, error }) {
         <p className="font-display uppercase tracking-wide text-chalk/70 mb-2">
           No standings data
         </p>
-        <p className="font-body text-sm text-chalk/45 max-w-sm mx-auto">
+        <p className="font-body text-sm text-chalk/60 max-w-sm mx-auto">
           No completed matches have been played yet. Standings will appear here once match results are recorded.
         </p>
       </div>
     )
   }
 
-  const totalTeams = standings.length
-
   return (
-    <div className="overflow-x-auto -mx-6 md:mx-0">
-      <div className="min-w-[600px] md:min-w-0 px-6 md:px-0">
+    <div className="overflow-x-auto">
+      <div>
         <table className="w-full bg-glass-bg border border-glass-border rounded-xl overflow-hidden" role="table">
           {/* ── Table head ── */}
-          <thead className="sr-only md:not-sr-only">
+          <thead>
             <tr className="border-b border-glass-border">
-              <th scope="col" className="px-6 py-4 text-left">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">#</span>
+              <th scope="col" className="px-3 md:px-6 py-4 text-left">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">#</span>
               </th>
-              <th scope="col" className="px-4 py-4 text-left">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">Club</span>
+              <th scope="col" className="px-2 md:px-4 py-4 text-left">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">Club</span>
               </th>
-              <th scope="col" className="px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">P</span>
+              <th scope="col" className="px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">P</span>
               </th>
-              <th scope="col" className="hidden md:table-cell px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">W</span>
+              <th scope="col" className="hidden md:table-cell px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">W</span>
               </th>
-              <th scope="col" className="hidden md:table-cell px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">D</span>
+              <th scope="col" className="hidden md:table-cell px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">D</span>
               </th>
-              <th scope="col" className="hidden md:table-cell px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">L</span>
+              <th scope="col" className="hidden md:table-cell px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">L</span>
               </th>
-              <th scope="col" className="hidden md:table-cell px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">GF</span>
+              <th scope="col" className="hidden md:table-cell px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">GF</span>
               </th>
-              <th scope="col" className="hidden md:table-cell px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">GA</span>
+              <th scope="col" className="hidden md:table-cell px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">GA</span>
               </th>
-              <th scope="col" className="px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">GD</span>
+              <th scope="col" className="px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">GD</span>
               </th>
-              <th scope="col" className="px-4 py-4 text-center">
-                <span className="font-body text-[10px] font-semibold uppercase tracking-widest2 text-chalk/40">Pts</span>
+              <th scope="col" className="px-2 md:px-4 py-4 text-center">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">Pts</span>
+              </th>
+              <th scope="col" className="hidden md:table-cell px-2 md:px-6 py-4 text-left">
+                <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">Form</span>
               </th>
             </tr>
           </thead>
 
           {/* ── Table body ── */}
           <tbody>
-            {standings.flatMap((entry, index) => {
-              const showContinentalDivider = totalTeams > 4 && index === 3
-              const showRelegationDivider = totalTeams > 6 && index > 3 && index === totalTeams - 4
-
-              const rows = []
-
-              if (showContinentalDivider) {
-                rows.push(
-                  <ZoneDivider
-                    key={`divider-continental-${index}`}
-                    label="Continental / Promotion Zone"
-                    accent="floodlight"
-                  />
-                )
-              }
-              if (showRelegationDivider) {
-                rows.push(
-                  <ZoneDivider
-                    key={`divider-relegation-${index}`}
-                    label="Relegation Zone"
-                    accent="flare"
-                  />
-                )
-              }
-
-              rows.push(
-                <tr key={entry.team.id}>
+            {standings.map((entry) => (
+                <tr
+                  key={entry.team.id}
+                  className={entry.position === 1 && entry.played > 0 ? "bg-floodlight/[0.07]" : ""}
+                >
                   {/* Position */}
-                  <td className="px-6 py-4 align-middle">
-                    <span className="font-display text-sm font-semibold text-chalk/50 tabular-nums">
+                  <td className="px-3 md:px-6 py-4 align-middle">
+                    <span className="font-display text-sm font-semibold text-chalk/60 tabular-nums">
                       {entry.position}
                     </span>
                   </td>
 
                   {/* Club */}
-                  <td className="px-4 py-4 align-middle">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <td className="px-2 md:px-4 py-4 align-middle max-w-[9rem] md:max-w-none">
+                    <Link
+                      to={`/teams/${entry.team.id}`}
+                      className="group flex min-h-11 items-center gap-3 min-w-0"
+                    >
                       <TeamEmblem name={entry.team.name} size="sm" />
-                      <span className="font-body text-sm font-semibold text-chalk truncate">
+                      <span className="font-body text-sm font-semibold text-chalk truncate transition-colors group-hover:text-floodlight">
                         {entry.team.name}
                       </span>
-                    </div>
+                    </Link>
                   </td>
 
                   {/* Played */}
-                  <td className="px-4 py-4 align-middle text-center">
+                  <td className="px-2 md:px-4 py-4 align-middle text-center">
                     <span className="font-display text-sm font-semibold text-chalk/80 tabular-nums">
                       {entry.played}
                     </span>
                   </td>
 
                   {/* W / D / L */}
-                  <td className="hidden md:table-cell px-4 py-4 align-middle text-center">
+                  <td className="hidden md:table-cell px-2 md:px-4 py-4 align-middle text-center">
                     <span className="font-body text-sm text-chalk/60 tabular-nums">{entry.wins}</span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-4 align-middle text-center">
+                  <td className="hidden md:table-cell px-2 md:px-4 py-4 align-middle text-center">
                     <span className="font-body text-sm text-chalk/60 tabular-nums">{entry.draws}</span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-4 align-middle text-center">
+                  <td className="hidden md:table-cell px-2 md:px-4 py-4 align-middle text-center">
                     <span className="font-body text-sm text-chalk/60 tabular-nums">{entry.losses}</span>
                   </td>
 
                   {/* GF / GA */}
-                  <td className="hidden md:table-cell px-4 py-4 align-middle text-center">
+                  <td className="hidden md:table-cell px-2 md:px-4 py-4 align-middle text-center">
                     <span className="font-body text-sm text-chalk/60 tabular-nums">{entry.goalsFor}</span>
                   </td>
-                  <td className="hidden md:table-cell px-4 py-4 align-middle text-center">
+                  <td className="hidden md:table-cell px-2 md:px-4 py-4 align-middle text-center">
                     <span className="font-body text-sm text-chalk/60 tabular-nums">{entry.goalsAgainst}</span>
                   </td>
 
                   {/* Goal Difference */}
-                  <td className="px-4 py-4 align-middle text-center">
+                  <td className="px-2 md:px-4 py-4 align-middle text-center">
                     <span
                       className={`font-display text-sm font-bold tabular-nums ${
                         entry.gd > 0
-                          ? "text-pitch-light"
+                          ? "text-emerald-400"
                           : entry.gd < 0
                             ? "text-flare"
-                            : "text-chalk/50"
+                            : "text-chalk/60"
                       }`}
                     >
                       {entry.gd > 0 ? "+" : ""}
@@ -228,25 +188,27 @@ export default function StandingsTable({ standings, loading, error }) {
                   </td>
 
                   {/* Points — muted tone when 0 */}
-                  <td className="px-4 py-4 align-middle text-center">
+                  <td className="px-2 md:px-4 py-4 align-middle text-center">
                     <span
                       className={`font-display text-base font-bold tabular-nums ${
-                        entry.points > 0 ? "text-floodlight" : "text-chalk/50"
+                        entry.points > 0 ? "text-floodlight" : "text-chalk/60"
                       }`}
                     >
                       {entry.points}
                     </span>
                   </td>
-                </tr>
-              )
 
-              return rows
-            })}
+                  {/* Form: last five results */}
+                  <td className="hidden md:table-cell px-2 md:px-6 py-4 align-middle">
+                    <FormPills form={entry.form} />
+                  </td>
+                </tr>
+            ))}
           </tbody>
         </table>
-        {/* Mobile hint */}
-        <p className="md:hidden font-body text-[10px] text-chalk/30 mt-3 text-center">
-          Scroll horizontally for full stats &middot; W D L GF GA
+        {/* Column legend */}
+        <p className="font-body text-xs text-chalk/60 mt-3 text-center">
+          P played<span className="hidden md:inline"> &middot; W won &middot; D drawn &middot; L lost &middot; GF goals for &middot; GA goals against</span> &middot; GD goal difference &middot; Pts points
         </p>
       </div>
     </div>

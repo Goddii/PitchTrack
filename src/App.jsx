@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import Home from './pages/Home'
 import Teams from './pages/Teams'
@@ -16,6 +15,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import ResetPassword from "./pages/ResetPassword"
 import MatchDetails from "./pages/MatchDetails"
 import AdminPanel from "./pages/AdminPanel"
+import AdminMatchStats from "./pages/AdminMatchStats"
 
 
 function App() {
@@ -23,6 +23,7 @@ function App() {
     return (
         <BrowserRouter>
         <AuthProvider>
+            <a href="#main" className="skip-link">Skip to main content</a>
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/teams" element={<Teams />} />
@@ -50,6 +51,14 @@ function App() {
                     element={
                         <ProtectedRoute adminOnly>
                             <AdminPanel />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin/matches/:id/stats"
+                    element={
+                        <ProtectedRoute adminOnly>
+                            <AdminMatchStats />
                         </ProtectedRoute>
                     }
                 />

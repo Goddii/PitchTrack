@@ -1,5 +1,3 @@
-import TeamEmblem from "./TeamEmblem"
-
 export default function MatchCard({ match }) {
     const date = new Date(match.match_date)
     const formattedDate = date.toLocaleDateString(undefined, {
@@ -24,12 +22,12 @@ export default function MatchCard({ match }) {
                         {match.home_score} - {match.away_score}
                     </span>    
                 ) : (
-                    <span className="text-chalk/40 text-sm uppercase tracking-widest2"> vs </span>
+                    <span className="text-chalk/60 text-sm uppercase tracking-widest2"> vs </span>
                 )}
                 <span className="text-chalk">{match.away_team?.name ?? "TBD"}</span>
 
             </div>
-            <span className="text-chalk/50 text-sm">{isCompleted ? "Final": `${formattedDate} - ${formattedTime}`}
+            <span className="text-chalk/60 text-sm">{isCompleted ? "Final": `${formattedDate} - ${formattedTime}`}
             </span>
 
         </div>

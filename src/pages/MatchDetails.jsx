@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, MapPin, Calendar, CalendarX } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import PublicNavbar from "../components/PublicNavbar"
 import EmptyState from "../components/EmptyState"
+import ErrorState from "../components/ErrorState"
+import { useAsync } from "../hooks/useAsync"
 import api from "../services/api"
 
 function formatDate(dateStr) {
@@ -40,25 +41,11 @@ function TeamColumn({ team }) {
 export default function MatchDetails() {
     const { user } = useAuth()
     const { id } = useParams()
-    const [match, setMatch] = useState(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
-        api.matches
-            .get(id)
-            .then((data) => {
-                if (!cancelled) setMatch(data)
-            })
-            .catch(() => {
-                if (!cancelled) setMatch(null)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-        return () => { cancelled = true }
-    }, [id])
+    const { data: match, loading, error, refetch } = useAsync(
+        (signal) => api.matches.get(id, { signal }),
+        [id],
+        null
+    )
 
     if (loading) {
         return (
@@ -68,6 +55,16 @@ export default function MatchDetails() {
                     <div className="h-8 w-64 bg-line/30 rounded mb-4" />
                     <div className="h-4 w-40 bg-line/20 rounded" />
                 </div>
+            </div>
+        )
+    }
+
+    // A 404 means the fixture is gone; anything else is a load failure worth retrying
+    if (error && error.status !== 404) {
+        return (
+            <div>
+                <PublicNavbar user={user} />
+                <ErrorState error={error} onRetry={refetch} title="Couldn't load this match" />
             </div>
         )
     }
@@ -97,12 +94,13 @@ export default function MatchDetails() {
         <div>
             <PublicNavbar user={user} />
 
+            <main id="main">
             {/* Hero */}
             <section className="bg-gradient-to-b from-night to-pitch/20 border-b border-line">
                 <div className="max-w-7xl mx-auto px-6 md:px-10 py-14">
                     <Link
                         to="/matches"
-                        className="inline-flex items-center gap-1.5 font-body text-sm text-chalk/50 hover:text-floodlight transition-colors mb-8"
+                        className="inline-flex items-center min-h-11 gap-1.5 font-body text-sm text-chalk/60 hover:text-floodlight transition-colors mb-8"
                     >
                         <ArrowLeft size={15} /> Back to Matches
                     </Link>
@@ -114,7 +112,7 @@ export default function MatchDetails() {
                                 Live · {match.minute}'
                             </span>
                         ) : (
-                            <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/40">
+                            <span className="font-body text-xs font-semibold uppercase tracking-widest2 text-chalk/60">
                                 {isCompleted ? "Full time" : "Scheduled"}
                             </span>
                         )}
@@ -129,7 +127,7 @@ export default function MatchDetails() {
                                     {match.home_score} - {match.away_score}
                                 </span>
                             ) : (
-                                <span className="font-display text-3xl text-chalk/40 uppercase tracking-widest2">vs</span>
+                                <span className="font-display text-3xl text-chalk/60 uppercase tracking-widest2">vs</span>
                             )}
                         </div>
 
@@ -143,26 +141,27 @@ export default function MatchDetails() {
                 <h2 className="font-display uppercase tracking-wide text-2xl text-chalk mb-8">Match Info</h2>
                 <div className="bg-pitch/30 border border-line rounded-lg divide-y divide-line">
                     <div className="flex items-center gap-3 px-5 py-4 font-body text-sm">
-                        <Calendar size={16} className="text-chalk/40 shrink-0" />
+                        <Calendar size={16} className="text-chalk/60 shrink-0" />
                         <span className="text-chalk/60">Date</span>
                         <span className="ml-auto text-chalk">{formatDate(match.match_date)}</span>
                     </div>
                     {!isCompleted && (
                         <div className="flex items-center gap-3 px-5 py-4 font-body text-sm">
-                            <Calendar size={16} className="text-chalk/40 shrink-0" />
+                            <Calendar size={16} className="text-chalk/60 shrink-0" />
                             <span className="text-chalk/60">Kickoff</span>
                             <span className="ml-auto text-chalk">{formatTime(match.match_date)}</span>
                         </div>
                     )}
                     {match.venue && (
                         <div className="flex items-center gap-3 px-5 py-4 font-body text-sm">
-                            <MapPin size={16} className="text-chalk/40 shrink-0" />
+                            <MapPin size={16} className="text-chalk/60 shrink-0" />
                             <span className="text-chalk/60">Venue</span>
                             <span className="ml-auto text-chalk">{match.venue}</span>
                         </div>
                     )}
                 </div>
             </section>
+        </main>
         </div>
     )
 }

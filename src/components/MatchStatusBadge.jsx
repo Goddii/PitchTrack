@@ -25,7 +25,7 @@ function MatchStatusBadge({ status, minute, className = "" }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-body text-[10px] font-semibold uppercase tracking-widest2 ${config.className} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-body text-xs font-semibold uppercase tracking-widest2 ${config.className} ${className}`}
       aria-label={
         status === "live"
           ? `Live, ${minute} minutes elapsed`
@@ -44,7 +44,7 @@ function MatchStatusBadge({ status, minute, className = "" }) {
       )}
       {config.label}
       {status === "live" && minute != null && (
-        <span className="font-body text-[10px] font-normal opacity-80">
+        <span className="font-body text-xs font-normal opacity-80">
           {minute}&prime;
         </span>
       )}

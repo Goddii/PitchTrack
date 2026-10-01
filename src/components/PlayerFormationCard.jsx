@@ -1,11 +1,11 @@
 import { memo } from "react"
 import { Link } from "react-router-dom"
 
-/* ─────────────────────────────────────────────
+/*
    PlayerLineupMarker
    A lightweight football lineup marker — no card, no borders, no container.
    Only: portrait (with spotlight), trapezoid nameplate, tiny club badge.
-   ───────────────────────────────────────────── */
+   */
 
 function PlayerFormationCard({ player, teamName, className = "" }) {
   const playerId = player?.id
@@ -71,7 +71,7 @@ function PlayerFormationCard({ player, teamName, className = "" }) {
         className="-mt-3 relative z-10 [clip-path:polygon(10%_0%,90%_0%,100%_100%,0%_100%)]"
       >
         <div className="bg-black/85 px-3 py-1">
-          <span className="block font-display uppercase tracking-wide text-chalk text-[11px] leading-tight text-center">
+          <span className="block font-display uppercase tracking-wide text-chalk text-xs leading-tight text-center">
             {playerName}
           </span>
         </div>

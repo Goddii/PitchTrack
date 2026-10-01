@@ -1,66 +1,58 @@
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, MapPin, Calendar, Star, Users2, ShieldQuestion } from "lucide-react"
 import PublicNavbar from "../components/PublicNavbar"
-import MatchCard from "../components/MatchCard"
+import FixtureStrip from "../components/FixtureStrip"
 import EmptyState from "../components/EmptyState"
 import PlayerFormationCard from "../components/PlayerFormationCard"
 import FormationPitch from "../components/FormationPitch"
+import ErrorState from "../components/ErrorState"
+import FormPills from "../components/FormPills"
+import { computeStandings } from "../utils/standings"
+import { useAsync } from "../hooks/useAsync"
 import api from "../services/api"
 import { useAuth } from "../context/AuthContext"
+
+const NO_ITEMS = []
+const MAX_FIXTURES = 6
+
+const byDateAsc = (a, b) => new Date(a.match_date) - new Date(b.match_date)
 
 
 export default function TeamDetails() {
     const { id } = useParams()
     const { user, isAuthenticated } = useAuth()
-    const [team, setTeam] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [followed, setFollowed] = useState(false)
     const [togglingFollow, setTogglingFollow] = useState(false)
-    const [matches, setMatches] = useState([])
-    const [roster, setRoster] = useState([])
+    const [followOverride, setFollowOverride] = useState(null) // { id, value } from an optimistic toggle
 
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
+    const { data, loading, error, refetch } = useAsync(
+        (signal) =>
+            Promise.all([
+                api.teams.get(id, { signal }),
+                api.matches.list({ team_id: id }, { signal }),
+                api.players.list({ team_id: id }, { signal }),
+            ]).then(([team, matches, roster]) => ({ team, matches, roster })),
+        [id],
+        null
+    )
+    const team = data?.team ?? null
+    const matches = data?.matches ?? NO_ITEMS
+    const roster = data?.roster ?? NO_ITEMS
 
-        const fetchData = async () => {
-            try {
-                const [teamData, matchesData, playersData] = await Promise.all([
-                    api.teams.get(id),
-                    api.matches.list({ team_id: id }),
-                    api.players.list({ team_id: id }),
-                ])
-                if (cancelled) return
-                setTeam(teamData)
-                setMatches(matchesData)
-                setRoster(playersData)
-
-                // Check if user already follows this team
-                if (isAuthenticated) {
-                    try {
-                        const favs = await api.favorites.list()
-                        if (!cancelled) {
-                            setFollowed(favs.some((f) => String(f.team.id) === String(id)))
-                        }
-                    } catch { /* ignore */ }
-                }
-            } catch {
-                if (!cancelled) setTeam(null)
-            } finally {
-                if (!cancelled) setLoading(false)
-            }
-        }
-
-        fetchData()
-        return () => { cancelled = true }
-    }, [id, isAuthenticated])
+    // Follow state loads on its own, so auth resolving doesn't reload the whole page
+    const { data: favorites } = useAsync(
+        (signal) => (isAuthenticated ? api.favorites.list({ signal }) : Promise.resolve([])),
+        [isAuthenticated],
+        []
+    )
+    const serverFollowed = favorites.some((f) => String(f.team.id) === String(id))
+    const followed = followOverride?.id === id ? followOverride.value : serverFollowed
 
     const handleToggleFollow = useCallback(async () => {
         if (togglingFollow) return
         setTogglingFollow(true)
         const prev = followed
-        setFollowed((f) => !f)
+        setFollowOverride({ id, value: !prev })
         try {
             if (prev) {
                 await api.favorites.unfollow(Number(id))
@@ -68,7 +60,7 @@ export default function TeamDetails() {
                 await api.favorites.follow(Number(id))
             }
         } catch {
-            setFollowed(prev)
+            setFollowOverride({ id, value: prev })
         } finally {
             setTogglingFollow(false)
         }
@@ -90,6 +82,11 @@ export default function TeamDetails() {
       return groups
     }, [roster])
 
+    const record = useMemo(
+        () => (team ? computeStandings([team], matches)[0] : null),
+        [team, matches]
+    )
+
     if (loading) {
         return (
             <div>
@@ -102,6 +99,16 @@ export default function TeamDetails() {
             </div>
         )
     }
+    // A 404 means the club is gone; anything else is a load failure worth retrying
+    if (error && error.status !== 404) {
+        return (
+            <div>
+                <PublicNavbar user={user} />
+                <ErrorState error={error} onRetry={refetch} title="Couldn't load this team" />
+            </div>
+        )
+    }
+
     if (!team) {
         return (
             <div>
@@ -120,19 +127,27 @@ export default function TeamDetails() {
         )
     }
 
-    const upcoming = matches.filter((m) => m.status !== "completed" && m.status !== "live")
-    const past = matches.filter((m) => m.status === "completed")
+    // Live matches belong with what is still to play, so a club mid-game never shows an empty list
+    const upcoming = matches.filter((m) => m.status !== "completed").sort(byDateAsc).slice(0, MAX_FIXTURES)
+    const past = matches.filter((m) => m.status === "completed").sort(byDateAsc).slice(-MAX_FIXTURES)
 
     return (
         <div>
             <PublicNavbar user={user} />
 
+            <main id="main">
             {/*Hero*/}
-            <section className="bg-gradient-to-b from-night to-pitch/20 border-b border-line">
-                <div className="max-w--7xl mx-auto px-6 md:px-10 py-14">
+            <section className="relative overflow-hidden bg-gradient-to-b from-night to-pitch/20 border-b border-line">
+                <span
+                    className="pointer-events-none absolute -bottom-8 right-0 max-w-full select-none whitespace-nowrap font-display text-[12rem] font-bold uppercase leading-none text-chalk/[0.04]"
+                    aria-hidden="true"
+                >
+                    {team.name.split(" ")[0]}
+                </span>
+                <div className="relative max-w-7xl mx-auto px-6 md:px-10 py-14">
                     <Link 
                         to="/teams"
-                        className="inline-flex items-center gap-1.5 font-body text-sm text-chalk/50 hover:text-floodlight transition-colors mb-8"
+                        className="inline-flex items-center min-h-11 gap-1.5 font-body text-sm text-chalk/60 hover:text-floodlight transition-colors mb-8"
                     >
                         <ArrowLeft size={15} /> Back to Teams
                     </Link>
@@ -155,7 +170,7 @@ export default function TeamDetails() {
                             <div className="flex flex-wrap gap-x-5 gap-y-2 font-body text-sm text-chalk/60">
                                 <span className="flex items-center gap-1.5"><MapPin size={14}/> {team.city} </span>
                                 <span className="flex items-center gap-1.5"> <Calendar size={14} /> Est. {team.founded_year}</span>
-                                {team.coach && <span className="flex items-center gap-1.5"> <Users2 size={14}/>Coach:{team.coach}</span>}
+                                {team.coach && <span className="flex items-center gap-1.5"> <Users2 size={14}/>Coach: {team.coach}</span>}
 
                             </div>
 
@@ -178,6 +193,37 @@ export default function TeamDetails() {
 
                     </div>
 
+                    {record && (
+                        <div className="mt-10 flex flex-col gap-6 border-t border-line pt-8 md:flex-row md:items-end md:justify-between">
+                            <dl className="grid grid-cols-4 gap-x-6 gap-y-4 sm:grid-cols-7">
+                                {[
+                                    ["P", record.played],
+                                    ["W", record.wins],
+                                    ["D", record.draws],
+                                    ["L", record.losses],
+                                    ["GF", record.goalsFor],
+                                    ["GA", record.goalsAgainst],
+                                    ["Pts", record.points],
+                                ].map(([label, value]) => (
+                                    <div key={label}>
+                                        <dt className="font-body text-xs uppercase tracking-widest2 text-chalk/70">{label}</dt>
+                                        <dd
+                                            className={`font-display text-3xl font-bold tabular-nums ${
+                                                label === "Pts" ? "text-floodlight" : "text-chalk"
+                                            }`}
+                                        >
+                                            {value}
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                            <div>
+                                <div className="mb-2 font-body text-xs uppercase tracking-widest2 text-chalk/70">Form</div>
+                                <FormPills form={record.form} />
+                            </div>
+                        </div>
+                    )}
+
                 </div>
 
             </section>
@@ -193,7 +239,7 @@ export default function TeamDetails() {
                                   lines[position]?.length > 0 && (
                                     <div
                                       key={position}
-                                      className="flex justify-center items-center gap-x-3 md:gap-x-5 gap-y-4 flex-wrap"
+                                      className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-evenly gap-x-3 gap-y-4 md:gap-x-5"
                                     >
                                       {lines[position].map((player) => (
                                         <PlayerFormationCard
@@ -218,13 +264,9 @@ export default function TeamDetails() {
 
             {/* Upcoming matches */}
             <section className="max-w-7xl mx-auto px-6 md:px-10 pb-16">
-                <h2 className="font-display uppercase tracking-wide text-2l text-chalk mb-8"> Upcoming matches</h2>
+                <h2 className="font-display uppercase tracking-wide text-2xl text-chalk mb-8"> Upcoming matches</h2>
                 {upcoming.length > 0 ? (
-                    <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
-                        {upcoming.map((m) => (
-                            <MatchCard key={m.id} match={m} />
-                        ))}
-                    </div>
+                    <FixtureStrip fixtures={upcoming} teams={NO_ITEMS} loading={false} error={null} />
                 ): (
                     <EmptyState icon={Calendar} title="No upcoming matches" message="Nothing scheduled for this club yet"/>
                 )}
@@ -235,16 +277,13 @@ export default function TeamDetails() {
             <section className="max-w-7xl mx-auto px-6 md:px-10 pb-20">
                 <h2 className="font-display uppercase tracking-wide text-2xl text-chalk mb-8"> Past Matches</h2>
                 {past.length > 0 ? (
-                    <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
-                        {past.map((m) => (
-                            <MatchCard key={m.id} match={m} />
-                        ))}
-                    </div>
+                    <FixtureStrip fixtures={past} teams={NO_ITEMS} loading={false} error={null} />
                 ): (
                     <EmptyState icon={Calendar} title="No past matches logged yet"/>
                 )}
 
             </section>
+        </main>
         </div>
     )
 }

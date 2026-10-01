@@ -132,12 +132,11 @@ Key reusable components in `src/components/`:
 | `PublicNavbar.jsx` | Navigation bar for public pages |
 | `DashboardNav.jsx` | Navigation bar for authenticated dashboard |
 | `AdminSidebar.jsx` | Sidebar layout wrapper for admin panel |
-| `Modal.jsx` | Reusable modal dialog (Radix-based) |
+| `Modal.jsx` | Reusable modal dialog (custom, with Escape-to-close and backdrop click) |
 | `ProtectedRoute.jsx` | Route guard — redirects unauthenticated users to `/login` |
 | `EmptyState.jsx` | Empty state placeholder with icon, message, optional action |
 | `TeamCard.jsx` | Team card with follow support |
 | `LeagueSection.jsx` | Collapsible match section with decorative background |
-| `ExpandedMatchPanel.jsx` | Match statistics panel (possession, shots, cards, momentum) |
 | `SearchBar.jsx`, `FilterDropdown.jsx`, `MatchFilters.jsx` | Search and filter controls |
 | `MatchCardSkeleton.jsx`, `PlayerCardSkeleton.jsx`, `MatchSkeleton.jsx`, `TeamcardSkeleton.jsx` | Loading skeletons |
 
@@ -291,10 +290,6 @@ The frontend expects a Flask API at `http://localhost:5000`. The backend project
 
 The API should return JSON. Authentication endpoints should return `{ token, user }` on success. Protected endpoints should return 401 for invalid/missing tokens.
 
-### Mock Data
-
-The file `src/data/mockData.js` contains sample teams (8 clubs), players (18 players with outfield and goalkeeper attribute sets), and matches (14 matches with scheduled, completed, and live statuses). This file was used during development before the API was available and mirrors the expected API response shapes.
-
 ---
 
 ## Available Scripts
@@ -329,8 +324,6 @@ PitchTrack/
 │   │   └── api.js           # HTTP client + API endpoint definitions
 │   ├── utils/
 │   │   └── playerRating.js  # Shared player rating computation
-│   ├── data/
-│   │   └── mockData.js      # Development mock data (teams, players, matches)
 │   ├── pages/               # Route-level page components
 │   │   ├── Home.jsx
 │   │   ├── Teams.jsx
@@ -368,7 +361,6 @@ PitchTrack/
 │       ├── EmptyState.jsx
 │       ├── TeamCard.jsx
 │       ├── LeagueSection.jsx
-│       ├── ExpandedMatchPanel.jsx
 │       ├── LeagueStats.jsx
 │       ├── Chart.jsx
 │       ├── DashboardStatCard.jsx

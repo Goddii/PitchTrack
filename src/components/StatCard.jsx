@@ -48,7 +48,7 @@ export default function StatCard({label, value, icon: Icon}){
                 <span className="text-floodlight"> + </span>
 
             </div>
-            <div className="font-body text-sm text-chalk/50"> {label} </div>
+            <div className="font-body text-sm text-chalk/60"> {label} </div>
         </div>
     )
 }

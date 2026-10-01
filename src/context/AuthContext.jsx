@@ -1,31 +1,40 @@
-import { createContext, useCallback, useContext, useEffect, useState} from "react"
-import api, {getToken, setToken} from "../services/api"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import api, { getToken, setToken, UNAUTHORIZED_EVENT } from "../services/api"
 
 const AuthContext = createContext(null)
 
 
-export function AuthProvider({ children }){
-    const [ user, setUser] = useState(null)
-    const [loading, setLoading] =  useState(true) //true while we check for an existing session
+export function AuthProvider({ children }) {
+    const [user, setUser] = useState(null)
+    // True while a stored token is being validated; with no token there is nothing to wait for
+    const [loading, setLoading] = useState(() => Boolean(getToken()))
 
-    // on first load, if a token is stashed in localstorage validate it against /auth/me
-    // so a page refresh doesn't boot the user back to a logged-out state
-
+    // On first load, validate a stashed token against /auth/me so a page refresh
+    // doesn't boot the user back to a logged-out state
     useEffect(() => {
-        const token = getToken()
-        if (!token) {
-            setLoading(false)
-            return
-        }
+        if (!getToken()) return
+        const controller = new AbortController()
 
-        api.auth 
-            .me()
+        api.auth
+            .me({ signal: controller.signal })
             .then((data) => setUser(data))
             .catch(() => {
+                if (controller.signal.aborted) return
                 setToken(null)
                 setUser(null)
             })
-            .finally(() => setLoading(false))
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false)
+            })
+
+        return () => controller.abort()
+    }, [])
+
+    // api.js clears the token and fires this when any authenticated call returns 401
+    useEffect(() => {
+        const handleUnauthorized = () => setUser(null)
+        window.addEventListener(UNAUTHORIZED_EVENT, handleUnauthorized)
+        return () => window.removeEventListener(UNAUTHORIZED_EVENT, handleUnauthorized)
     }, [])
 
     const login = useCallback(async (email, password) => {
@@ -36,14 +45,14 @@ export function AuthProvider({ children }){
     }, [])
 
     const register = useCallback(async (name, email, password) => {
-        const data = await api.auth.register({ name, email, password})
+        const data = await api.auth.register({ name, email, password })
         setToken(data.token)
         setUser(data.user)
         return data.user
     }, [])
 
     const logout = useCallback(() => {
-        // best effort call the token is discarde client side regardless
+        // Best effort: the token is discarded client side regardless
         api.auth.logout().catch(() => {})
         setToken(null)
         setUser(null)
@@ -55,24 +64,29 @@ export function AuthProvider({ children }){
         return data
     }, [])
 
-    const value = {
-        user,
-        loading,
-        isAuthenticated: Boolean(user),
-        isAdmin: user?.role === "admin",
-        login,
-        register,
-        logout, 
-        updateProfile,
-    }
+    const value = useMemo(
+        () => ({
+            user,
+            loading,
+            isAuthenticated: Boolean(user),
+            isAdmin: user?.role === "admin",
+            login,
+            register,
+            logout,
+            updateProfile,
+        }),
+        [user, loading, login, register, logout, updateProfile]
+    )
 
     return <AuthContext.Provider value={value}> {children} </AuthContext.Provider>
 }
 
+// The hook lives beside its provider so every consumer imports from one module
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const ctx = useContext(AuthContext)
     if (!ctx) {
-        throw new Error("useAuth must be used inside and <AuthProvider>")
+        throw new Error("useAuth must be used inside an <AuthProvider>")
     }
     return ctx
 }

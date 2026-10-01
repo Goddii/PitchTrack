@@ -39,13 +39,13 @@ function EmptyMatches({
       {/* Content */}
       <div className="relative z-10">
         <div className="w-16 h-16 rounded-2xl bg-floodlight/10 flex items-center justify-center mx-auto mb-6">
-          <Icon size={28} className="text-floodlight/60" strokeWidth={1.5} />
+          <Icon size={28} className="text-floodlight/70" strokeWidth={1.5} />
         </div>
 
         <h3 className="font-display text-xl font-semibold uppercase tracking-wide text-chalk/80 mb-2">
           {title}
         </h3>
-        <p className="font-body text-sm text-chalk/45 max-w-md mx-auto mb-8 leading-relaxed">
+        <p className="font-body text-sm text-chalk/60 max-w-md mx-auto mb-8 leading-relaxed">
           {message}
         </p>
 

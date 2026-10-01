@@ -1,8 +1,8 @@
 import { memo } from "react"
 
 const SIZE_MAP = {
-  xs: "w-7 h-7 text-[11px]",
-  sm: "w-8 h-8 text-[10px]",
+  xs: "w-7 h-7 text-xs",
+  sm: "w-8 h-8 text-xs",
   md: "w-14 h-14 text-sm",
   lg: "w-28 h-28 text-xl",
 }
