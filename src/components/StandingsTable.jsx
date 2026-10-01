@@ -138,7 +138,7 @@ export default function StandingsTable({ standings, loading, error }) {
                       to={`/teams/${entry.team.id}`}
                       className="group flex min-h-11 items-center gap-3 min-w-0"
                     >
-                      <TeamEmblem name={entry.team.name} size="sm" />
+                      <TeamEmblem name={entry.team.name} logoUrl={entry.team.logo_url} size="sm" />
                       <span className="font-body text-sm font-semibold text-chalk truncate transition-colors group-hover:text-floodlight">
                         {entry.team.name}
                       </span>

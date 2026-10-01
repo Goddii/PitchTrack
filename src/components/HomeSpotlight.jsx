@@ -64,7 +64,7 @@ function MatchSpotlightCard({ match }) {
 
             <div className="grid flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4">
                 <div className="flex min-w-0 flex-col items-center gap-3">
-                    <TeamEmblem name={home} size="md" />
+                    <TeamEmblem name={home} logoUrl={match.home_team?.logo_url} size="md" />
                     <span className="font-body text-sm font-semibold text-chalk text-center line-clamp-2" title={home}>
                         {home}
                     </span>
@@ -90,7 +90,7 @@ function MatchSpotlightCard({ match }) {
                 </div>
 
                 <div className="flex min-w-0 flex-col items-center gap-3">
-                    <TeamEmblem name={away} size="md" />
+                    <TeamEmblem name={away} logoUrl={match.away_team?.logo_url} size="md" />
                     <span className="font-body text-sm font-semibold text-chalk text-center line-clamp-2" title={away}>
                         {away}
                     </span>

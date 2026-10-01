@@ -139,7 +139,7 @@ export function NextMatchCard({ match, teamId }) {
                 {[home, away].map((side, i) => (
                     <div key={side.id} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
                         {i === 1 && <span className="sr-only">versus</span>}
-                        <TeamEmblem name={side.name} size="md" />
+                        <TeamEmblem name={side.name} logoUrl={side.logo_url} size="md" />
                         <span className={`max-w-full truncate font-body text-xs ${side.id === teamId ? "text-chalk" : "text-chalk/70"}`}>
                             {side.name}
                         </span>

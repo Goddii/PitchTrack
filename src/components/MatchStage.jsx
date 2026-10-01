@@ -43,7 +43,7 @@ function TeamBlock({ team, side, formation }) {
 
     return (
         <div className={`flex min-w-0 flex-col gap-1.5 ${align}`}>
-            <TeamEmblem name={team?.name} size="sm" />
+            <TeamEmblem name={team?.name} logoUrl={team?.logo_url} size="sm" />
             {team ? (
                 <Link
                     to={`/teams/${team.id}`}

@@ -2,10 +2,14 @@ import { Link } from "react-router-dom"
 import { ArrowLeft, Star } from "lucide-react"
 import { TEAM_TABS } from "../utils/teamTabs"
 
-function Crest({ team, className }) {
-    if (team.logo_url) return <img src={team.logo_url} alt="" className={className} />
+const CREST_SIZE = "size-20 shrink-0 md:size-28"
+
+function Crest({ team }) {
+    if (team.logo_url) {
+        return <img src={team.logo_url} alt="" className={`${CREST_SIZE} object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]`} />
+    }
     return (
-        <span className={`flex items-center justify-center bg-pitch font-display text-chalk/60 ${className}`}>
+        <span className={`${CREST_SIZE} flex items-center justify-center rounded-full border border-line bg-pitch font-display text-3xl text-chalk/60`}>
             {team.name.charAt(0)}
         </span>
     )
@@ -35,7 +39,7 @@ export default function TeamHero({ team, league, tab, onTabChange, isFollowable,
                     src={team.logo_url}
                     alt=""
                     aria-hidden="true"
-                    className="pointer-events-none absolute -right-10 top-1/2 h-[140%] max-w-none -translate-y-1/2 select-none object-contain opacity-[0.12] blur-[1px]"
+                    className="pointer-events-none absolute right-6 top-1/2 h-[88%] max-w-none -translate-y-1/2 select-none object-contain opacity-[0.12] blur-[1px]"
                 />
             )}
 
@@ -48,7 +52,7 @@ export default function TeamHero({ team, league, tab, onTabChange, isFollowable,
                 </Link>
 
                 <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-4">
-                    <Crest team={team} className="size-20 shrink-0 rounded-full border border-line object-cover text-3xl md:size-24" />
+                    <Crest team={team} />
                     <div className="min-w-0 flex-1">
                         <h1 className="font-display text-3xl uppercase tracking-wide text-chalk md:text-5xl">{team.name}</h1>
                         {team.nickname && <p className="mt-1 font-body text-sm text-chalk/60">{team.nickname}</p>}

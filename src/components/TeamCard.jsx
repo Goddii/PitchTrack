@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import FormPills from "./FormPills"
+import TeamEmblem from "./TeamEmblem"
 
 export default function TeamCard({ team, entry }) {
     return (
@@ -14,15 +15,7 @@ export default function TeamCard({ team, entry }) {
                 {entry ? entry.position : ""}
             </span>
 
-            <div className="relative mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-pitch">
-                {team.logo_url ? (
-                    <img src={team.logo_url} alt={`${team.name} logo`} className="h-full w-full object-cover" />
-                ):(
-                    <span className="font-display text-xl text-chalk/85">
-                        {team.name?.charAt(0) ?? "?"}
-                    </span>
-                )}
-            </div>
+            <TeamEmblem name={team.name} logoUrl={team.logo_url} size="xl" className="relative mb-3" />
             <span className="relative font-display uppercase tracking-wide text-chalk transition-colors group-hover:text-floodlight">
                 {team.name}
             </span>

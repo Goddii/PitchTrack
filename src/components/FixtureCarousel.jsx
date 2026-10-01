@@ -69,12 +69,12 @@ function FixtureRow({ match, isSelected, onSelect }) {
                 <span className="truncate text-right font-body text-xs font-semibold text-chalk" title={home}>
                     {home}
                 </span>
-                <TeamEmblem name={home} size="xs" />
+                <TeamEmblem name={home} logoUrl={match.home_team?.logo_url} size="xs" />
                 <span className="flex flex-col items-center leading-tight">
                     <span className={`font-display text-sm tabular-nums ${isLive ? "text-flare" : "text-chalk"}`}>{main}</span>
                     {sub && <span className="font-body text-[0.65rem] uppercase tracking-widest2 text-chalk/60">{sub}</span>}
                 </span>
-                <TeamEmblem name={away} size="xs" />
+                <TeamEmblem name={away} logoUrl={match.away_team?.logo_url} size="xs" />
                 <span className="truncate font-body text-xs font-semibold text-chalk" title={away}>
                     {away}
                 </span>

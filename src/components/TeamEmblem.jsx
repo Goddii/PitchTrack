@@ -5,10 +5,23 @@ const SIZE_MAP = {
   sm: "w-8 h-8 text-xs",
   md: "w-14 h-14 text-sm",
   lg: "w-28 h-28 text-xl",
+  xl: "w-20 h-20 text-2xl",
 }
 
-function TeamEmblem({ name, size = "md", className = "" }) {
+/** Club crest when a logo exists (shown whole, never cropped), else a letter badge. */
+function TeamEmblem({ name, logoUrl, size = "md", className = "" }) {
   const sizeClass = SIZE_MAP[size] || SIZE_MAP.md
+
+  if (logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt=""
+        aria-hidden="true"
+        className={`${sizeClass} shrink-0 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] ${className}`}
+      />
+    )
+  }
 
   return (
     <div

@@ -46,12 +46,12 @@ function FixtureCard({ match, index }) {
                 <MatchStatusBadge status={match.status} minute={match.minute} />
                 <div className="fixture-card-teams">
                     <div className="fixture-card-team">
-                        <TeamEmblem name={home} size="sm" />
+                        <TeamEmblem name={home} logoUrl={match.home_team?.logo_url} size="sm" />
                         <span className="fixture-card-name" title={home}>{home}</span>
                     </div>
                     <FixtureScore match={match} />
                     <div className="fixture-card-team">
-                        <TeamEmblem name={away} size="sm" />
+                        <TeamEmblem name={away} logoUrl={match.away_team?.logo_url} size="sm" />
                         <span className="fixture-card-name" title={away}>{away}</span>
                     </div>
                 </div>
