@@ -4,7 +4,7 @@ const DRAW_POINTS = 1
 
 const byDateAsc = (a, b) => new Date(a.match_date) - new Date(b.match_date)
 
-function resultFor(teamId, match) {
+export function resultFor(teamId, match) {
     const isHome = match.home_team?.id === teamId
     const scored = (isHome ? match.home_score : match.away_score) ?? 0
     const conceded = (isHome ? match.away_score : match.home_score) ?? 0

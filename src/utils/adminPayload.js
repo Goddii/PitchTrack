@@ -1,5 +1,5 @@
 const INT_FIELDS = {
-    teams: ["founded_year"],
+    teams: ["founded_year", "capacity", "captain_id"],
     players: ["team_id", "jersey_number", "age"],
     matches: ["home_team_id", "away_team_id", "home_score", "away_score", "minute"],
 }

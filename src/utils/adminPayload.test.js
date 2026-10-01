@@ -26,6 +26,13 @@ describe("normalizePayload", () => {
         expect(payload.founded_year).toBeNull()
     })
 
+    it("coerces a team's capacity and captain_id, sending null when blank", () => {
+        const filled = normalizePayload("teams", { capacity: "12000", captain_id: "7" })
+        const blank = normalizePayload("teams", { capacity: "", captain_id: "" })
+        expect(filled).toMatchObject({ capacity: 12000, captain_id: 7 })
+        expect(blank).toMatchObject({ capacity: null, captain_id: null })
+    })
+
     it("coerces player integer fields, including the team id from the select", () => {
         const payload = normalizePayload("players", { team_id: "3", jersey_number: "9", age: "" })
         expect(payload).toMatchObject({ team_id: 3, jersey_number: 9, age: null })

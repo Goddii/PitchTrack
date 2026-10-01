@@ -39,14 +39,14 @@ function Input({ value, onChange, placeholder, type = "text", required }) {
     )
 }
 
-function Select({ value, onChange, options }) {
+function Select({ value, onChange, options, emptyLabel }) {
     return (
         <select
             value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-night border border-line rounded-lg px-4 py-2.5 font-body text-sm text-chalk focus:border-floodlight transition-colors"
         >
-            <option value="" disabled>Select…</option>
+            <option value="" disabled={!emptyLabel}>{emptyLabel ?? "Select…"}</option>
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value} className="bg-night text-chalk">
                     {opt.label}
@@ -140,6 +140,10 @@ export default function AdminPanel() {
                 founded_year: item.founded_year ?? "",
                 coach: item.coach || "",
                 logo_url: item.logo_url || "",
+                nickname: item.nickname || "",
+                stadium: item.stadium || "",
+                capacity: item.capacity ?? "",
+                captain_id: item.captain_id ?? "",
             })
         } else if (section === "players") {
             setFormData({
@@ -288,6 +292,27 @@ const GOALKEEPER_ATTRS = [
                     <Field label="Logo URL">
                         <Input value={formData.logo_url} onChange={setField("logo_url")} placeholder="https://..." />
                     </Field>
+                    <Field label="Nickname">
+                        <Input value={formData.nickname} onChange={setField("nickname")} placeholder="e.g. The Kestrels" />
+                    </Field>
+                    <Field label="Stadium">
+                        <Input value={formData.stadium} onChange={setField("stadium")} placeholder="e.g. Riverside Park" />
+                    </Field>
+                    <Field label="Capacity">
+                        <Input value={formData.capacity} onChange={setField("capacity")} type="number" placeholder="e.g. 12000" />
+                    </Field>
+                    {editingItem && (
+                        <Field label="Captain">
+                            <Select
+                                value={formData.captain_id}
+                                onChange={setField("captain_id")}
+                                emptyLabel="No captain"
+                                options={players
+                                    .filter((p) => p.team?.id === editingItem.id)
+                                    .map((p) => ({ value: p.id, label: p.name }))}
+                            />
+                        </Field>
+                    )}
                 </div>
             )
         }
