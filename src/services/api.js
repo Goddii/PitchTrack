@@ -14,7 +14,9 @@ export function setToken(token){
     }
 }
 
-async function request(path, {method = "GET", body, auth = true} = {}){
+export const UNAUTHORIZED_EVENT = "pitchtrack:unauthorized"
+
+async function request(path, {method = "GET", body, auth = true, signal} = {}){
     const headers = {'Content-Type': "application/json"}
 
     if (auth) {
@@ -26,6 +28,7 @@ async function request(path, {method = "GET", body, auth = true} = {}){
         method,
         headers,
         body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal,
     })
 
     //204/empty bodies are valid for some responses guard against JSON parse errors
@@ -37,6 +40,12 @@ async function request(path, {method = "GET", body, auth = true} = {}){
         } catch {
             data = null
         }
+    }
+
+    // An expired or revoked token: drop it and let AuthProvider clear the user
+    if (res.status === 401 && auth && getToken()) {
+        setToken(null)
+        window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
     }
 
     if (!res.ok) {
@@ -54,44 +63,50 @@ export const api = {
         register: (payload) => request("/auth/register", {method:"POST", body:payload, auth:false}),
         login: (payload) => request("/auth/login", {method:"POST", body:payload, auth:false}),
         logout: () => request("/auth/logout", {method: "POST"}),
-        me: () => request("/auth/me"),
+        me: (opts = {}) => request("/auth/me", opts),
         updateMe: (payload) => request("/auth/me", { method: "PUT", body:payload}),
         forgotPassword: (payload) => request("/auth/forgot-password", {method: "POST", body: payload, auth:false}),
         resetPassword: (payload) => request("/auth/reset-password", {method: "POST", body: payload, auth: false}),
     },
 
     teams: {
-        list: () => request("/teams", { auth: false }),
-        get: (id) => request(`/teams/${id}`, { auth: false }),
+        list: (opts = {}) => request("/teams", { auth: false, ...opts }),
+        get: (id, opts = {}) => request(`/teams/${id}`, { auth: false, ...opts }),
+        playerStats: (id, opts = {}) => request(`/teams/${id}/player-stats`, { auth: false, ...opts }),
         create: (payload) => request("/teams", { method: "POST", body: payload }),
         update: (id, payload) => request(`/teams/${id}`, { method: "PUT", body: payload }),
         remove: (id) => request(`/teams/${id}`, { method: "DELETE" }),
     },
 
     players: {
-        list: (params = {}) => {
+        list: (params = {}, opts = {}) => {
             const qs = new URLSearchParams(params).toString();
-            return request(`/players${qs ? `?${qs}` : ""}`, { auth: false });
+            return request(`/players${qs ? `?${qs}` : ""}`, { auth: false, ...opts });
         },
-        get: (id) => request(`/players/${id}`, { auth: false }),
+        get: (id, opts = {}) => request(`/players/${id}`, { auth: false, ...opts }),
+        stats: (id, opts = {}) => request(`/players/${id}/stats`, { auth: false, ...opts }),
+        matches: (id, opts = {}) => request(`/players/${id}/matches`, { auth: false, ...opts }),
         create: (payload) => request("/players", { method: "POST", body: payload }),
         update: (id, payload) => request(`/players/${id}`, { method: "PUT", body: payload }),
         remove: (id) => request(`/players/${id}`, { method: "DELETE" }),
     },
 
     matches: {
-        list: (params = {}) => {
+        list: (params = {}, opts = {}) => {
             const qs = new URLSearchParams(params).toString();
-            return request(`/matches${qs ? `?${qs}` : ""}`, { auth: false });
+            return request(`/matches${qs ? `?${qs}` : ""}`, { auth: false, ...opts });
         },
-        get: (id) => request(`/matches/${id}`, { auth: false }),
+        get: (id, opts = {}) => request(`/matches/${id}`, { auth: false, ...opts }),
+        playerStats: (id, opts = {}) => request(`/matches/${id}/player-stats`, { auth: false, ...opts }),
+        saveStats: (id, stats) => request(`/matches/${id}/player-stats`, { method: "PUT", body: { stats } }),
+        removeStat: (matchId, playerId) => request(`/matches/${matchId}/player-stats/${playerId}`, { method: "DELETE" }),
         create: (payload) => request("/matches", { method: "POST", body: payload }),
         update: (id, payload) => request(`/matches/${id}`, { method: "PUT", body: payload }),
         remove: (id) => request(`/matches/${id}`, { method: "DELETE" }),
     },
 
     favorites: {
-        list: () => request("/favorites"),
+        list: (opts = {}) => request("/favorites", opts),
         follow: (teamId) => request(`/favorites/${teamId}`, { method: "POST" }),
         unfollow: (teamId) => request(`/favorites/${teamId}`, { method: "DELETE" }),
     },

@@ -14,7 +14,7 @@ const STATS = [
 export default function LeagueStats() {
     return (
         <section className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-            <h2 className="font-display uppercase tracking-wide text-2xl text-chalk b-8">
+            <h2 className="font-display uppercase tracking-wide text-2xl text-chalk mb-8">
                 League Statistics
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

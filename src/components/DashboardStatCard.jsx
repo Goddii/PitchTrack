@@ -1,46 +1,36 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3)
 }
 
-function animatedValue(end, duration = 1200) {
+function prefersReducedMotion() {
+    return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
+function useAnimatedValue(end, duration = 1200) {
     const [value, setValue] = useState(0)
-    const frameRef = useRef(null)
-    const prefersReduced = useRef(
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    )
+    // Reduced motion (or nothing to count to) shows the final value directly, with no state updates
+    const isStatic = end === 0 || prefersReducedMotion()
 
     useEffect(() => {
-        if (prefersReduced.current) {
-            setValue(end)
-            return
-        }
-        if (end === 0) {
-            setValue(0)
-            return
-        }
+        if (isStatic) return
+        let frame = 0
         const start = performance.now()
         const tick = (now) => {
-            const elapsed = now - start
-            const progress = Math.min(elapsed / duration, 1)
+            const progress = Math.min((now - start) / duration, 1)
             setValue(Math.round(easeOutCubic(progress) * end))
-            if (progress < 1) {
-                frameRef.current = requestAnimationFrame(tick)
-            }
+            if (progress < 1) frame = requestAnimationFrame(tick)
         }
-        frameRef.current = requestAnimationFrame(tick)
-        return () => {
-            if (frameRef.current) cancelAnimationFrame(frameRef.current)
-        }
-    }, [end, duration])
+        frame = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(frame)
+    }, [end, duration, isStatic])
 
-    return value
+    return isStatic ? end : value
 }
 
 export default function DashboardStatCard({ label, value, icon: Icon, accent = false }) {
-    const count = animatedValue(value)
+    const count = useAnimatedValue(value)
 
     return (
         <div
@@ -66,7 +56,7 @@ export default function DashboardStatCard({ label, value, icon: Icon, accent = f
                     <div className={`p-2.5 rounded-lg ${
                         accent
                             ? "bg-floodlight/15 text-floodlight"
-                            : "bg-chalk/5 text-chalk/40"
+                            : "bg-chalk/5 text-chalk/60"
                     }`}>
                         <Icon size={18} strokeWidth={1.5} />
                     </div>

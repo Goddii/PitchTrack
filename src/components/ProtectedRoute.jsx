@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-night">
-                <p className="font-body text-sm text-chalk/50 uppercase tracking-widest2">Loading...</p>
+                <p className="font-body text-sm text-chalk/60 uppercase tracking-widest2">Loading...</p>
             </div>
         );
     }

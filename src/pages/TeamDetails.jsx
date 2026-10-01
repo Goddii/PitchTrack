@@ -1,66 +1,104 @@
-import { useEffect, useState, useCallback, useMemo } from "react"
-import { useParams, Link } from "react-router-dom"
-import { ArrowLeft, MapPin, Calendar, Star, Users2, ShieldQuestion } from "lucide-react"
+import { useState, useCallback, useMemo } from "react"
+import { useParams, useSearchParams, Link } from "react-router-dom"
+import { Calendar, Users2, ShieldQuestion } from "lucide-react"
 import PublicNavbar from "../components/PublicNavbar"
-import MatchCard from "../components/MatchCard"
+import FixtureStrip from "../components/FixtureStrip"
 import EmptyState from "../components/EmptyState"
-import PlayerFormationCard from "../components/PlayerFormationCard"
-import FormationPitch from "../components/FormationPitch"
+import ErrorState from "../components/ErrorState"
+import SquadGrid from "../components/SquadGrid"
+import SquadTable from "../components/SquadTable"
+import SquadLeaders from "../components/SquadLeaders"
+import TeamHero from "../components/TeamHero"
+import { NextMatchCard, RecentFormCard, TeamInfoCard, TeamStatsCard } from "../components/TeamRail"
+import { summarizeTeam } from "../utils/teamSummary"
+import { DEFAULT_TEAM_TAB, TEAM_TABS } from "../utils/teamTabs"
+import { useAsync } from "../hooks/useAsync"
 import api from "../services/api"
 import { useAuth } from "../context/AuthContext"
 
+const NO_ITEMS = []
+const MAX_FIXTURES = 6
+const FORM_LENGTH = 5
+
+const byDateAsc = (a, b) => new Date(a.match_date) - new Date(b.match_date)
+const involves = (teamId) => (m) => m.home_team?.id === teamId || m.away_team?.id === teamId
+
+function PageFrame({ user, children }) {
+    return (
+        <div>
+            <PublicNavbar user={user} />
+            {children}
+        </div>
+    )
+}
+
+function MatchesPanel({ upcoming, past }) {
+    return (
+        <div className="flex flex-col gap-8">
+            <section aria-labelledby="team-upcoming">
+                <h2 id="team-upcoming" className="mb-4 font-display text-xl uppercase tracking-wide text-chalk">Upcoming matches</h2>
+                {upcoming.length > 0 ? (
+                    <FixtureStrip fixtures={upcoming} teams={NO_ITEMS} loading={false} error={null} />
+                ) : (
+                    <EmptyState icon={Calendar} title="No upcoming matches" message="Nothing scheduled for this club yet" />
+                )}
+            </section>
+            <section aria-labelledby="team-past">
+                <h2 id="team-past" className="mb-4 font-display text-xl uppercase tracking-wide text-chalk">Past matches</h2>
+                {past.length > 0 ? (
+                    <FixtureStrip fixtures={past} teams={NO_ITEMS} loading={false} error={null} />
+                ) : (
+                    <EmptyState icon={Calendar} title="No past matches logged yet" />
+                )}
+            </section>
+        </div>
+    )
+}
 
 export default function TeamDetails() {
     const { id } = useParams()
     const { user, isAuthenticated } = useAuth()
-    const [team, setTeam] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [followed, setFollowed] = useState(false)
+    const [searchParams, setSearchParams] = useSearchParams()
     const [togglingFollow, setTogglingFollow] = useState(false)
-    const [matches, setMatches] = useState([])
-    const [roster, setRoster] = useState([])
+    const [followOverride, setFollowOverride] = useState(null) // { id, value } from an optimistic toggle
 
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
+    const requestedTab = searchParams.get("tab")
+    const tab = TEAM_TABS.some((t) => t.value === requestedTab) ? requestedTab : DEFAULT_TEAM_TAB
+    const changeTab = useCallback(
+        (next) => setSearchParams(next === DEFAULT_TEAM_TAB ? {} : { tab: next }, { replace: true }),
+        [setSearchParams]
+    )
 
-        const fetchData = async () => {
-            try {
-                const [teamData, matchesData, playersData] = await Promise.all([
-                    api.teams.get(id),
-                    api.matches.list({ team_id: id }),
-                    api.players.list({ team_id: id }),
-                ])
-                if (cancelled) return
-                setTeam(teamData)
-                setMatches(matchesData)
-                setRoster(playersData)
+    const { data, loading, error, refetch } = useAsync(
+        (signal) =>
+            Promise.all([
+                api.teams.get(id, { signal }),
+                api.teams.list({ signal }),
+                api.matches.list({}, { signal }),
+                api.players.list({ team_id: id }, { signal }),
+            ]).then(([team, teams, matches, roster]) => ({ team, teams, matches, roster })),
+        [id],
+        null
+    )
+    const team = data?.team ?? null
+    const teams = data?.teams ?? NO_ITEMS
+    const allMatches = data?.matches ?? NO_ITEMS
+    const roster = data?.roster ?? NO_ITEMS
 
-                // Check if user already follows this team
-                if (isAuthenticated) {
-                    try {
-                        const favs = await api.favorites.list()
-                        if (!cancelled) {
-                            setFollowed(favs.some((f) => String(f.team.id) === String(id)))
-                        }
-                    } catch { /* ignore */ }
-                }
-            } catch {
-                if (!cancelled) setTeam(null)
-            } finally {
-                if (!cancelled) setLoading(false)
-            }
-        }
-
-        fetchData()
-        return () => { cancelled = true }
-    }, [id, isAuthenticated])
+    // Follow state loads on its own, so auth resolving doesn't reload the whole page
+    const { data: favorites } = useAsync(
+        (signal) => (isAuthenticated ? api.favorites.list({ signal }) : Promise.resolve([])),
+        [isAuthenticated],
+        []
+    )
+    const serverFollowed = favorites.some((f) => String(f.team.id) === String(id))
+    const followed = followOverride?.id === id ? followOverride.value : serverFollowed
 
     const handleToggleFollow = useCallback(async () => {
         if (togglingFollow) return
         setTogglingFollow(true)
         const prev = followed
-        setFollowed((f) => !f)
+        setFollowOverride({ id, value: !prev })
         try {
             if (prev) {
                 await api.favorites.unfollow(Number(id))
@@ -68,183 +106,107 @@ export default function TeamDetails() {
                 await api.favorites.follow(Number(id))
             }
         } catch {
-            setFollowed(prev)
+            setFollowOverride({ id, value: prev })
         } finally {
             setTogglingFollow(false)
         }
     }, [id, followed, togglingFollow])
 
-    /* ── Group roster by position for formation layout ── */
-    const lines = useMemo(() => {
-      const groups = {
-        Forward: [],
-        Midfielder: [],
-        Defender: [],
-        Goalkeeper: [],
-      }
-      roster.forEach((p) => {
-        if (groups[p.position]) {
-          groups[p.position].push(p)
-        }
-      })
-      return groups
-    }, [roster])
+    const summary = useMemo(() => (team ? summarizeTeam(team, teams, allMatches) : null), [team, teams, allMatches])
 
     if (loading) {
         return (
-            <div>
-                <PublicNavbar user={user} />
-                <div className="max-w-7xl mx-auto px-6 md:px-10 py-24 animate-pulse">
-                    <div className="h-8 w-64 bg-line/30 rounded mb-4"/>
-                    <div className="h-4 w-40 bg-line/20 rounded"/>
-
+            <PageFrame user={user}>
+                <div className="mx-auto max-w-7xl animate-pulse px-6 py-24 md:px-10">
+                    <div className="mb-4 h-8 w-64 rounded bg-line/30" />
+                    <div className="h-4 w-40 rounded bg-line/20" />
                 </div>
-            </div>
+            </PageFrame>
+        )
+    }
+    // A 404 means the club is gone; anything else is a load failure worth retrying
+    if (error && error.status !== 404) {
+        return (
+            <PageFrame user={user}>
+                <ErrorState error={error} onRetry={refetch} title="Couldn't load this team" />
+            </PageFrame>
         )
     }
     if (!team) {
         return (
-            <div>
-                <PublicNavbar user={user} />
-                <EmptyState 
+            <PageFrame user={user}>
+                <EmptyState
                     icon={ShieldQuestion}
                     title="Team not found"
                     message="This club may have been removed or the link is out of date"
-                    action = {
-                        <Link to="/teams" className="font-body text-sm font-semibold text-floodlight hover:text-chalk transition-colors">
+                    action={
+                        <Link to="/teams" className="font-body text-sm font-semibold text-floodlight transition-colors hover:text-chalk">
                             ← Back to Teams
                         </Link>
                     }
                 />
-            </div>
+            </PageFrame>
         )
     }
 
-    const upcoming = matches.filter((m) => m.status !== "completed" && m.status !== "live")
-    const past = matches.filter((m) => m.status === "completed")
+    const teamId = team.id
+    const teamMatches = allMatches.filter(involves(teamId))
+    // Live matches belong with what is still to play, so a club mid-game never shows an empty list
+    const upcoming = teamMatches.filter((m) => m.status !== "completed").sort(byDateAsc).slice(0, MAX_FIXTURES)
+    const past = teamMatches.filter((m) => m.status === "completed").sort(byDateAsc).slice(-MAX_FIXTURES)
+    const captain = roster.find((p) => p.id === team.captain_id) ?? null
 
     return (
-        <div>
-            <PublicNavbar user={user} />
+        <PageFrame user={user}>
+            <main id="main" className="mx-auto grid max-w-7xl gap-4 px-4 py-5 md:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div className="flex min-w-0 flex-col gap-4">
+                    <TeamHero
+                        team={team}
+                        league={summary.league}
+                        tab={tab}
+                        onTabChange={changeTab}
+                        isFollowable={isAuthenticated}
+                        followed={followed}
+                        isToggling={togglingFollow}
+                        onToggleFollow={handleToggleFollow}
+                    />
 
-            {/*Hero*/}
-            <section className="bg-gradient-to-b from-night to-pitch/20 border-b border-line">
-                <div className="max-w--7xl mx-auto px-6 md:px-10 py-14">
-                    <Link 
-                        to="/teams"
-                        className="inline-flex items-center gap-1.5 font-body text-sm text-chalk/50 hover:text-floodlight transition-colors mb-8"
+                    <section
+                        role="tabpanel"
+                        id="team-panel"
+                        aria-labelledby={`team-tab-${tab}`}
+                        className="rounded-xl border border-glass-border bg-glass-bg p-4 md:p-5"
                     >
-                        <ArrowLeft size={15} /> Back to Teams
-                    </Link>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                        <div className="w-24  h-24 rounded-full bg-pitch flex items-center justify-center shrink-0 border border-line">
-                            {team.logo_url ? (
-                                <img  src={team.logo_url} alt={`${team.name} logo`} className="w-full h-full object-cover rounded-full"/>
-                            ): (
-                                <span className="font-display text-chalk/60 text-3xl">
-                                    {team.name.charAt(0)}
-                                </span>
-                            )}
-
-                        </div>
-                        <div className="flex-1">
-                            <h1 className="font-display uppercase tracking-wide text-4xl md:text-5xl text-chalk mb-3">
-                                {team.name}
-                            </h1>
-                            <div className="flex flex-wrap gap-x-5 gap-y-2 font-body text-sm text-chalk/60">
-                                <span className="flex items-center gap-1.5"><MapPin size={14}/> {team.city} </span>
-                                <span className="flex items-center gap-1.5"> <Calendar size={14} /> Est. {team.founded_year}</span>
-                                {team.coach && <span className="flex items-center gap-1.5"> <Users2 size={14}/>Coach:{team.coach}</span>}
-
-                            </div>
-
-                        </div>
-                        {isAuthenticated && (
-                            <button
-                                onClick={handleToggleFollow}
-                                disabled={togglingFollow}
-                                aria-pressed={followed}
-                                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded font-body font-semibold text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    followed
-                                    ? "bg-pitch/20 border border-floodlight text-floodlight"
-                                    : "bg-floodlight text-night hover:bg-chalk"
-                                }`}
-                            >
-                                <Star size={16} fill={followed ? "currentColor" : "none"} />
-                                {followed ? "Following" : "Follow"}
-                            </button>
+                        {tab === "overview" && (
+                            <>
+                                <h2 className="mb-4 font-display text-xl uppercase tracking-wide text-chalk">
+                                    Squad <span className="ml-1 font-body text-sm normal-case tracking-normal text-chalk/60">{roster.length} players</span>
+                                </h2>
+                                {roster.length > 0 ? (
+                                    <SquadGrid players={roster} captainId={team.captain_id} />
+                                ) : (
+                                    <EmptyState icon={Users2} title="No players listed yet" message="This club hasn't added a roster" />
+                                )}
+                            </>
                         )}
-
-                    </div>
-
+                        {tab === "squad" &&
+                            (roster.length > 0 ? (
+                                <SquadTable teamId={teamId} players={roster} />
+                            ) : (
+                                <EmptyState icon={Users2} title="No players listed yet" message="This club hasn't added a roster" />
+                            ))}
+                        {tab === "matches" && <MatchesPanel upcoming={upcoming} past={past} />}
+                        {tab === "stats" && <SquadLeaders teamId={teamId} />}
+                    </section>
                 </div>
 
-            </section>
-
-            {/* ROSTER — Formation pitch with position-based layout */}
-            <section className="max-w-7xl mx-auto px-6 md:px-10 py-16">
-                <h2 className="font-display uppercase tracking-wide text-2xl text-chalk mb-8">Lineup</h2>
-                {roster.length > 0 ? (
-                    <FormationPitch className="min-h-[450px] md:min-h-[580px]">
-                        <div className="flex flex-col justify-evenly h-full min-h-[450px] md:min-h-[580px] py-6 md:py-10 px-3 md:px-6">
-                            {["Forward", "Midfielder", "Defender", "Goalkeeper"].map(
-                                (position) =>
-                                  lines[position]?.length > 0 && (
-                                    <div
-                                      key={position}
-                                      className="flex justify-center items-center gap-x-3 md:gap-x-5 gap-y-4 flex-wrap"
-                                    >
-                                      {lines[position].map((player) => (
-                                        <PlayerFormationCard
-                                          key={player.id}
-                                          player={player}
-                                          teamName={team.name}
-                                        />
-                                      ))}
-                                    </div>
-                                  )
-                            )}
-                        </div>
-                    </FormationPitch>
-                ) : (
-                    <EmptyState
-                      icon={Users2}
-                      title="No players listed yet"
-                      message="This club hasn't added a roster"
-                    />
-                )}
-            </section>
-
-            {/* Upcoming matches */}
-            <section className="max-w-7xl mx-auto px-6 md:px-10 pb-16">
-                <h2 className="font-display uppercase tracking-wide text-2l text-chalk mb-8"> Upcoming matches</h2>
-                {upcoming.length > 0 ? (
-                    <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
-                        {upcoming.map((m) => (
-                            <MatchCard key={m.id} match={m} />
-                        ))}
-                    </div>
-                ): (
-                    <EmptyState icon={Calendar} title="No upcoming matches" message="Nothing scheduled for this club yet"/>
-                )}
-
-            </section>
-
-            {/* Past matches */}
-            <section className="max-w-7xl mx-auto px-6 md:px-10 pb-20">
-                <h2 className="font-display uppercase tracking-wide text-2xl text-chalk mb-8"> Past Matches</h2>
-                {past.length > 0 ? (
-                    <div className="bg-pitch/30 border border-line rounded-lg overflow-hidden">
-                        {past.map((m) => (
-                            <MatchCard key={m.id} match={m} />
-                        ))}
-                    </div>
-                ): (
-                    <EmptyState icon={Calendar} title="No past matches logged yet"/>
-                )}
-
-            </section>
-        </div>
+                <aside aria-label="Team details" className="flex min-w-0 flex-col gap-4">
+                    <TeamInfoCard team={team} captain={captain} />
+                    <TeamStatsCard lastTen={summary.lastTen} />
+                    <RecentFormCard form={summary.league?.form.slice(-FORM_LENGTH) ?? NO_ITEMS} />
+                    <NextMatchCard match={summary.nextMatch} teamId={teamId} />
+                </aside>
+            </main>
+        </PageFrame>
     )
 }

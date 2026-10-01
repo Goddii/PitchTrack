@@ -17,7 +17,7 @@ export default function ForgotPassword() {
         setError("");
         setSubmitting(true);
         try {
-            const data = await api.auth.forgotPassword({ email: email.trim().toLowerCase() });
+            await api.auth.forgotPassword({ email: email.trim().toLowerCase() });
             setSubmitted(true);
         } catch (err) {
             setError(err.message || "Something went wrong");
@@ -29,11 +29,11 @@ export default function ForgotPassword() {
         <div>
             <PublicNavbar />
 
-            <section className="max-w-md mx-auto px-6 py-20">
+            <main id="main" className="max-w-md mx-auto px-6 py-20">
                 <h1 className="font-display uppercase tracking-wide text-3xl text-chalk mb-2">
                     Reset Password
                 </h1>
-                <p className="font-body text-sm text-chalk/50 mb-10">
+                <p className="font-body text-sm text-chalk/60 mb-10">
                     Enter your account email and we'll get you back in.
                 </p>
 
@@ -54,9 +54,9 @@ export default function ForgotPassword() {
                         )}
 
                         <label className="flex flex-col gap-2">
-                            <span className="font-body text-xs uppercase tracking-widest2 text-chalk/50">Email</span>
+                            <span className="font-body text-xs uppercase tracking-widest2 text-chalk/60">Email</span>
                             <div className="relative">
-                                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-chalk/40 pointer-events-none" />
+                                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-chalk/60 pointer-events-none" />
                                 <input
                                     type="email"
                                     required
@@ -64,7 +64,7 @@ export default function ForgotPassword() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
                                     autoComplete="email"
-                                    className="w-full bg-pitch/10 border border-line rounded-lg pl-10 pr-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/40 focus:outline-none focus:border-floodlight transition-colors"
+                                    className="w-full bg-pitch/10 border border-line rounded-lg pl-10 pr-4 py-2.5 font-body text-sm text-chalk placeholder:text-chalk/60 focus:border-floodlight transition-colors"
                                 />
                             </div>
                         </label>
@@ -79,13 +79,13 @@ export default function ForgotPassword() {
                     </form>
                 )}
 
-                <p className="font-body text-sm text-chalk/50 mt-8 text-center">
+                <p className="font-body text-sm text-chalk/60 mt-8 text-center">
                     Remembered it?{" "}
                     <Link to="/login" className="text-floodlight hover:text-chalk transition-colors font-semibold">
                         Sign In
                     </Link>
                 </p>
-            </section>
+            </main>
         </div>
     );
 }

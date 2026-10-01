@@ -19,3 +19,13 @@ export function ratingTier(score) {
     if (score >= 6) return "text-amber-400 border-amber-400/40 bg-amber-400/10"
     return "text-red-400 border-red-400/40 bg-red-400/10"
 }
+
+/**
+ * Players paired with their overall rating, best first. Players without attributes go last;
+ * ties fall back to name so the order is stable.
+ */
+export function rankByRating(players) {
+    return players
+        .map((player) => ({ player, rating: computeOverallRating(player.attributes) }))
+        .sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1) || a.player.name.localeCompare(b.player.name))
+}

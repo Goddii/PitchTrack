@@ -32,11 +32,6 @@ export default function DashboardNav() {
         }
     }, [profileOpen])
 
-    // Close mobile menu on route change
-    useEffect(() => {
-        setMobileOpen(false)
-    }, [location.pathname])
-
     return (
         <header className="sticky top-0 z-30 bg-night/90 backdrop-blur-lg border-b border-glass-border">
             <div className="max-w-7xl mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
@@ -50,7 +45,7 @@ export default function DashboardNav() {
                     >
                         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
-                    <Link to="/dashboard" className="flex items-center gap-2">
+                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
                         <span className="font-display font-bold text-lg tracking-wide text-chalk uppercase">
                             Pitch<span className="text-floodlight">Track</span>
                         </span>
@@ -66,7 +61,7 @@ export default function DashboardNav() {
                             className={`px-3 py-1.5 rounded-lg font-body text-xs font-medium uppercase tracking-widest2 transition-all duration-200 ${
                                 location.pathname.startsWith(link.to)
                                     ? "text-floodlight bg-floodlight/10"
-                                    : "text-chalk/50 hover:text-chalk hover:bg-chalk/5"
+                                    : "text-chalk/60 hover:text-chalk hover:bg-chalk/5"
                             }`}
                         >
                             {link.label}
@@ -78,7 +73,7 @@ export default function DashboardNav() {
                 <div className="flex items-center gap-2">
                     {/* Notification bell */}
                     <button
-                        className="p-2 rounded-lg text-chalk/40 hover:text-chalk hover:bg-chalk/5 transition-colors relative"
+                        className="p-2 rounded-lg text-chalk/60 hover:text-chalk hover:bg-chalk/5 transition-colors relative"
                         aria-label="Notifications"
                     >
                         <Bell size={18} />
@@ -101,7 +96,7 @@ export default function DashboardNav() {
                             </span>
                             <ChevronDown
                                 size={14}
-                                className={`text-chalk/40 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                                className={`text-chalk/60 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
                             />
                         </button>
 
@@ -110,7 +105,7 @@ export default function DashboardNav() {
                             <div className="absolute right-0 top-full mt-2 w-56 bg-night border border-glass-border rounded-xl shadow-xl shadow-black/30 py-2 backdrop-blur-xl z-50">
                                 <div className="px-4 py-3 border-b border-glass-border">
                                     <p className="font-body text-sm font-semibold text-chalk">{user?.name}</p>
-                                    <p className="font-body text-xs text-chalk/40 mt-0.5">{user?.email}</p>
+                                    <p className="font-body text-xs text-chalk/60 mt-0.5">{user?.email}</p>
                                 </div>
                                 <div className="py-1">
                                     <Link
@@ -138,7 +133,7 @@ export default function DashboardNav() {
                                             setProfileOpen(false)
                                             logout()
                                         }}
-                                        className="flex items-center gap-3 w-full px-4 py-2.5 font-body text-sm text-flare/70 hover:text-flare hover:bg-flare/5 transition-colors"
+                                        className="flex items-center gap-3 w-full px-4 py-2.5 font-body text-sm text-flare hover:text-flare hover:bg-flare/5 transition-colors"
                                     >
                                         <LogOut size={15} />
                                         Sign Out
