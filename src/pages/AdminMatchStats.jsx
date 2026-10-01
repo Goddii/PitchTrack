@@ -3,15 +3,19 @@ import { Link, useParams } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import AdminSidebar from "../components/AdminSidebar"
 import TeamStatsTable from "../components/TeamStatsTable"
+import LineupEditor from "../components/LineupEditor"
 import ErrorState from "../components/ErrorState"
 import { useAsync } from "../hooks/useAsync"
 import {
     EMPTY_DRAFT,
     draftFromRow,
     draftProblem,
+    isBlankDraft,
+    lineupProblem,
     payloadFromDrafts,
     startersDraft,
     teamGoalTotal,
+    toggleStarter,
 } from "../utils/matchStatsForm"
 import api from "../services/api"
 
@@ -33,6 +37,7 @@ export default function AdminMatchStats() {
     const { data, loading, error, refetch } = useAsync((signal) => loadMatchStats(id, signal), [id], null)
 
     const [edits, setEdits] = useState({})
+    const [formationEdits, setFormationEdits] = useState({})
     const [saving, setSaving] = useState(false)
     const [flash, setFlash] = useState(null)
     const flashTimer = useRef(null)
@@ -64,7 +69,43 @@ export default function AdminMatchStats() {
         setEdits((prev) => ({ ...prev, ...startersDraft(players, drafts, minutes) }))
     }
 
+    const toggleLineupPlayer = (playerId) =>
+        setEdits((prev) => ({ ...prev, [playerId]: toggleStarter(drafts[playerId]) }))
+
+    const changeFormation = (field, value) => setFormationEdits((prev) => ({ ...prev, [field]: value }))
+
+    const formationOf = (field) => (field in formationEdits ? formationEdits[field] : data.match[field])
+
+    const saveLineup = async () => {
+        const squads = [data.home, data.away]
+        if (squads.some((squad) => lineupProblem(squad, drafts) || squad.some((p) => draftProblem(drafts[p.id], { lineupOnly: true })))) {
+            showFlash("error", "Fix the lineup first")
+            return
+        }
+
+        const everyone = [...data.home, ...data.away]
+        const cleared = everyone.filter((p) => saved.ids.has(p.id) && isBlankDraft(drafts[p.id]))
+        const starters = payloadFromDrafts(drafts, new Set()).filter((row) => row.started)
+
+        setSaving(true)
+        try {
+            if (starters.length > 0) await api.matches.saveStats(id, starters)
+            await Promise.all(cleared.map((p) => api.matches.removeStat(id, p.id)))
+            if (Object.keys(formationEdits).length > 0) await api.matches.update(id, formationEdits)
+            setEdits({})
+            setFormationEdits({})
+            refetch()
+            showFlash("success", "Lineup saved")
+        } catch (err) {
+            showFlash("error", err.message || "Could not save the lineup")
+        } finally {
+            setSaving(false)
+        }
+    }
+
     const handleSave = async () => {
+        if (data.match.status === "scheduled") return saveLineup()
+
         const players = [...data.home, ...data.away]
         if (players.some((p) => draftProblem(drafts[p.id]))) {
             showFlash("error", "Fix the highlighted players first")
@@ -100,8 +141,8 @@ export default function AdminMatchStats() {
     }
 
     const match = data?.match
-    const isEditable = match && match.status !== "scheduled"
-    const dirty = Object.keys(edits).length > 0
+    const isLineupMode = match?.status === "scheduled"
+    const dirty = Object.keys(edits).length > 0 || Object.keys(formationEdits).length > 0
 
     return (
         <AdminSidebar>
@@ -150,13 +191,26 @@ export default function AdminMatchStats() {
                             </p>
                         </header>
 
-                        {!isEditable ? (
-                            <p className="rounded-lg border border-line bg-pitch/10 p-6 font-body text-sm text-chalk/70">
-                                Stats can be entered once the match is live or completed.
-                            </p>
-                        ) : (
+                        {(
                             <>
                                 <div className="space-y-8">
+                                    {isLineupMode ? (
+                                        [
+                                            [match.home_team.name, data.home, "home_formation"],
+                                            [match.away_team.name, data.away, "away_formation"],
+                                        ].map(([name, squad, field]) => (
+                                            <LineupEditor
+                                                key={field}
+                                                title={name}
+                                                players={squad}
+                                                drafts={drafts}
+                                                formation={formationOf(field)}
+                                                onFormation={(value) => changeFormation(field, value)}
+                                                onToggle={toggleLineupPlayer}
+                                                disabled={saving}
+                                            />
+                                        ))
+                                    ) : (<>
                                     <TeamStatsTable
                                         title={match.home_team.name}
                                         players={data.home}
@@ -175,6 +229,7 @@ export default function AdminMatchStats() {
                                         onStarters={() => markStarters(data.away)}
                                         disabled={saving}
                                     />
+                                    </>)}
                                 </div>
 
                                 <div className="sticky bottom-0 mt-8 flex items-center justify-between gap-4 border-t border-line bg-night py-4">
@@ -187,7 +242,7 @@ export default function AdminMatchStats() {
                                         disabled={saving || !dirty}
                                         className="min-h-11 cursor-pointer rounded-lg bg-floodlight px-6 font-body text-sm font-semibold text-night transition-colors hover:bg-chalk disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        {saving ? "Saving…" : "Save stats"}
+                                        {saving ? "Saving…" : isLineupMode ? "Save lineup" : "Save stats"}
                                     </button>
                                 </div>
                             </>

@@ -4,9 +4,11 @@ import {
     draftFromRow,
     draftProblem,
     isBlankDraft,
+    lineupProblem,
     payloadFromDrafts,
     startersDraft,
     teamGoalTotal,
+    toggleStarter,
 } from "./matchStatsForm"
 
 const draft = (overrides) => ({ ...EMPTY_DRAFT, ...overrides })
@@ -102,5 +104,45 @@ describe("startersDraft", () => {
         const drafts = { 1: EMPTY_DRAFT }
         startersDraft([{ id: 1 }], drafts, 90)
         expect(drafts[1]).toEqual(EMPTY_DRAFT)
+    })
+})
+
+describe("draftProblem in lineup-only mode", () => {
+    it("accepts a starter with no minutes", () => {
+        expect(draftProblem(draft({ started: true }), { lineupOnly: true })).toBeNull()
+    })
+
+    it("still rejects a starter with no minutes in normal mode", () => {
+        expect(draftProblem(draft({ started: true }))).not.toBeNull()
+    })
+})
+
+describe("toggleStarter", () => {
+    it("marks a blank player as a starter with zeroed numbers", () => {
+        expect(toggleStarter(EMPTY_DRAFT)).toEqual({ ...EMPTY_DRAFT, started: true })
+    })
+
+    it("clears a starter back to blank", () => {
+        expect(toggleStarter(draft({ started: true }))).toEqual(EMPTY_DRAFT)
+    })
+
+    it("does not mutate the draft it was given", () => {
+        const original = draft({ started: true })
+        toggleStarter(original)
+        expect(original.started).toBe(true)
+    })
+})
+
+describe("lineupProblem", () => {
+    const players = Array.from({ length: 12 }, (_, i) => ({ id: i + 1 }))
+    const startedDrafts = (count) =>
+        Object.fromEntries(players.map((p, i) => [p.id, draft({ started: i < count })]))
+
+    it("allows up to 11 starters", () => {
+        expect(lineupProblem(players, startedDrafts(11))).toBeNull()
+    })
+
+    it("rejects 12 starters", () => {
+        expect(lineupProblem(players, startedDrafts(12))).toMatch(/11/)
     })
 })

@@ -1,4 +1,5 @@
 const MAX_MINUTES = 120
+export const MAX_STARTERS = 11
 
 export const GOAL_TYPE_FIELDS = ["penalty_goals", "headed_goals", "right_foot_goals", "left_foot_goals"]
 export const COUNT_FIELDS = ["goals", "assists", "yellow_cards", "red_cards", ...GOAL_TYPE_FIELDS]
@@ -39,7 +40,7 @@ export function payloadFromDrafts(drafts, savedPlayerIds) {
 }
 
 /** The first thing wrong with one player's numbers, or null. The server checks again on save. */
-export function draftProblem(draft) {
+export function draftProblem(draft, { lineupOnly = false } = {}) {
     if (draft.minutes_played < 0 || draft.minutes_played > MAX_MINUTES) {
         return `Minutes must be between 0 and ${MAX_MINUTES}`
     }
@@ -47,13 +48,24 @@ export function draftProblem(draft) {
     const typed = GOAL_TYPE_FIELDS.reduce((sum, field) => sum + draft[field], 0)
     if (typed > draft.goals) return "The goal types add up to more than the goals scored"
 
-    if (draft.started && draft.minutes_played === 0) return "Marked as started but has no minutes played"
+    if (!lineupOnly && draft.started && draft.minutes_played === 0) return "Marked as started but has no minutes played"
 
     const didSomething = draft.goals + draft.assists + draft.yellow_cards + draft.red_cards > 0
     if (didSomething && draft.minutes_played === 0) {
         return "Goals, assists and cards need minutes played: this player did not play"
     }
     return null
+}
+
+/** Flip one player between starter and blank; an announced lineup carries no numbers. */
+export function toggleStarter(draft) {
+    return draft.started ? EMPTY_DRAFT : { ...EMPTY_DRAFT, started: true }
+}
+
+/** The problem with one team's announced XI, or null. The server checks again on save. */
+export function lineupProblem(players, drafts) {
+    const starters = players.filter((player) => drafts[player.id]?.started).length
+    return starters > MAX_STARTERS ? `Pick at most ${MAX_STARTERS} starters (${starters} chosen)` : null
 }
 
 /** Goals entered so far for a list of players. */

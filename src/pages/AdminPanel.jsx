@@ -559,11 +559,11 @@ const GOALKEEPER_ATTRS = [
                                             onEdit={openEdit}
                                             onDelete={setDeleteTarget}
                                             extra={
-                                                m.status !== "scheduled" && (
+                                                (
                                                     <Link
                                                         to={`/admin/matches/${m.id}/stats`}
-                                                        aria-label="Player stats"
-                                                        title="Player stats"
+                                                        aria-label={m.status === "scheduled" ? "Set lineup" : "Player stats"}
+                                                        title={m.status === "scheduled" ? "Set lineup" : "Player stats"}
                                                         className="p-1.5 rounded text-chalk/60 hover:text-floodlight hover:bg-pitch/30 transition-colors"
                                                     >
                                                         <ClipboardList size={15} />
